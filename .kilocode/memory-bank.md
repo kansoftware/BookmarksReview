@@ -12,12 +12,14 @@
 - Генератор диаграмм: [`src/diagram.py`](src/diagram.py) — Mermaid-представление структуры закладок.
 - Запись Markdown: [`src/writer.py`](src/writer.py) — создание директорий, метаданные (YAML), генерация и запись файлов.
 - Вспомогательные утилиты: [`src/utils.py`](src/utils.py) — переиспользуемые функции для путей, текста, дат, валидации, ошибок, хеширования, прогресса.
-- Основной workflow/CLI: [`src/main.py`](src/main.py) — оркестрация: Config → Parser → Fetcher → Summarizer → Writer (+Diagram).
+- Менеджер прогресса: [`src/progress.py`](src/progress.py) — сохранение и возобновление обработки закладок, чекпоинты в progress.json.
+- Основной workflow/CLI: [`src/main.py`](src/main.py) — оркестрация: Config → Parser → Fetcher → Summarizer → Writer (+Diagram) с поддержкой инкрементального выполнения.
 - Промпт для LLM: [`prompts/summarize_prompt.txt`](prompts/summarize_prompt.txt)
 
 Поток данных (ETL-пайплайн)
 - .env → ConfigManager → JSON Bookmarks → BookmarkParser → ContentFetcher → ContentSummarizer → FileSystemWriter → Markdown
 - Параллельно: BookmarkParser → DiagramGenerator → Mermaid-диаграмма
+- Инкрементальное выполнение: ProgressManager ↔︎ BookmarkParser/ContentFetcher/ContentSummarizer/FileSystemWriter
 
 Используемый технологический стек
 - Язык: Python 3.9+
@@ -101,6 +103,16 @@
 - ✅ Исправление циклического импорта в src/logger.py
   - Использован TYPE_CHECKING для разрешения циклической зависимости между src/config.py и src/logger.py
   - Обновлены аннотации типов для корректной работы с импортами
+- ✅ Задача 13: Инкрементальное выполнение и возобновление
+  - Реализован модуль [`src/progress.py`](src/progress.py) с ProgressManager для сохранения прогресса
+  - Добавлены чекпоинты в bookmarks_export/progress.json с атомарными записями
+  - Внедрена поддержка возобновления обработки с флагом --resume
+  - Реализовано периодическое сохранение прогресса через save_interval
+  - Добавлена проверка совместимости конфигурации через config_hash
+  - Интегрирован ProgressManager в основной workflow в [`src/main.py`](src/main.py)
+  - Исправлен парсер для обработки узлов без типа, но с дочерними элементами
+  - Добавлены unit-тесты (13 тестов) и интеграционные тесты (4 теста)
+  - Все тесты проходят успешно
 
 Тестовое покрытие
 - [`tests/test_config.py`](tests/test_config.py) — тесты конфигурации
@@ -111,3 +123,5 @@
 - [`tests/test_writer.py`](tests/test_writer.py) — тесты файлового писателя (18 passed)
 - [`tests/test_utils.py`](tests/test_utils.py) — тесты утилит (51 passed)
 - [`tests/test_main.py`](tests/test_main.py) — тесты основного модуля (10 passed, 1 skipped)
+- [`tests/test_progress.py`](tests/test_progress.py) — тесты менеджера прогресса (13 passed)
+- [`tests/test_integration_progress.py`](tests/test_integration_progress.py) — интеграционные тесты прогресса (4 passed)

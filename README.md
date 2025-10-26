@@ -113,6 +113,7 @@ python -m src.main bookmarks.json --max-concurrent 5
   - `diagram.py` — генератор Mermaid-диаграмм
   - `writer.py` — запись Markdown-файлов
   - `logger.py` — централизованная система логирования
+  - `progress.py` — менеджер прогресса для инкрементального выполнения
   - `utils.py` — вспомогательные утилиты
 - `prompts/` — файлы промптов
 - `tests/` — тесты
@@ -126,9 +127,12 @@ python -m src.main bookmarks.json --max-concurrent 5
 - Graceful degradation при ошибках
 
 ### Управление прогрессом
-- Сохранение прогресса в `progress.json`
+- Сохранение прогресса в `bookmarks_export/progress.json`
 - Возможность возобновления с `--resume`
-- Checkpoint каждые 50 закладок
+- Периодическое сохранение прогресса во время обработки
+- Отслеживание обработанных и неудачных URL
+- Сохранение текущей позиции для точного возобновления
+- Проверка совместимости конфигурации через хеш
 
 ### Визуализация структуры
 - Автоматическая генерация Mermaid-диаграмм
@@ -178,3 +182,53 @@ logger.info("Информационное сообщение")
 log_performance("operation_name", duration, "детали")
 log_error_with_context(error, {"context": "data"})
 ```
+
+### Формат файла прогресса
+Файл `bookmarks_export/progress.json` содержит:
+```json
+{
+  "version": "1.0",
+  "timestamp": "2025-10-26T13:00:00",
+  "bookmarks_file": "/path/to/bookmarks.json",
+  "config_hash": "sha256_hash",
+  "processed_urls": [
+    {
+      "url": "https://example.com",
+      "title": "Example Page",
+      "processed_at": "2025-10-26T13:00:00",
+      "file_path": "Folder/Example Page.md",
+      "folder_path": ["Folder"]
+    }
+  ],
+  "failed_urls": [
+    {
+      "url": "https://failed.com",
+      "title": "Failed Page",
+      "failed_at": "2025-10-26T13:00:00",
+      "error": "Connection timeout",
+      "folder_path": ["Folder"]
+    }
+  ],
+  "current_position": {
+    "folder_path": ["Folder"],
+    "bookmark_index": 1,
+    "total_in_folder": 5
+  },
+  "statistics": {
+    "total_bookmarks": 100,
+    "processed_count": 50,
+    "failed_count": 2,
+    "skipped_count": 0,
+    "start_time": "2025-10-26T12:00:00",
+    "last_update": "2025-10-26T13:00:00"
+  }
+}
+```
+
+### Возобновление обработки
+При использовании флага `--resume`:
+1. Загружается сохраненный прогресс из `bookmarks_export/progress.json`
+2. Проверяется совместимость конфигурации через хеш
+3. Восстанавливается последняя позиция обработки
+4. Пропускаются уже обработанные и неудачные закладки
+5. Обработка продолжается с последней необработанной закладки

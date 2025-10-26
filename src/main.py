@@ -6,11 +6,10 @@
 import asyncio
 import argparse
 import sys
-import json
-from pathlib import Path
-from typing import Optional, List, Tuple, Set, Dict, Any
-from datetime import datetime
 import time
+from pathlib import Path
+from typing import Optional, List, Tuple
+from datetime import datetime
 
 from src.config import ConfigManager
 from src.parser import BookmarkParser
@@ -21,6 +20,7 @@ from src.writer import FileSystemWriter
 from src.models import BookmarkFolder, Bookmark, ProcessedPage
 from src.utils import ProgressTracker, ErrorUtils, DateUtils
 from src.logger import get_logger, setup_logging, log_function_call, log_performance, log_error_with_context
+from src.progress import ProgressManager, calculate_config_hash
 
 # Настройка логера для модуля
 logger = get_logger(__name__)
@@ -125,89 +125,46 @@ def setup_application_logging(args: argparse.Namespace, config) -> None:
     logger.debug(f"Файл лога: {config.log_file}")
 
 
-def load_progress_data(output_dir: Path) -> Dict[str, Any]:
+def create_progress_manager(args: argparse.Namespace, config, bookmarks_file: str) -> ProgressManager:
     """
-    Загружает данные о прогрессе из файла.
+    Создает и инициализирует менеджер прогресса.
     
     Аргументы:
-        output_dir: Директория вывода
+        args: Аргументы командной строки
+        config: Объект конфигурации
+        bookmarks_file: Путь к файлу закладок
         
     Возвращает:
-        Dict[str, Any]: Данные о прогрессе или пустой словарь
+        ProgressManager: Инициализированный менеджер прогресса
     """
-    start_time = time.time()
-    log_function_call("load_progress_data", (str(output_dir),))
+    log_function_call("create_progress_manager", (bookmarks_file,), {"resume": args.resume})
     
-    progress_file = output_dir / "progress.json"
+    # Вычисляем хеш конфигурации
+    config_hash = calculate_config_hash(config)
     
-    if not progress_file.exists():
-        logger.debug(f"Файл прогресса не найден: {progress_file}")
-        return {}
+    # Создаем менеджер прогресса
+    progress_manager = ProgressManager(
+        output_dir=config.output_dir,
+        bookmarks_file=bookmarks_file,
+        config_hash=config_hash
+    )
     
-    try:
-        with open(progress_file, 'r', encoding='utf-8') as f:
-            progress_data = json.load(f)
-        
-        duration = time.time() - start_time
-        log_performance("load_progress_data", duration, f"file={progress_file}")
-        
-        processed_count = len(progress_data.get('processed_urls', []))
-        failed_count = len(progress_data.get('failed_urls', []))
-        
-        logger.info(f"Прогресс загружен из {progress_file}: {processed_count} обработано, {failed_count} с ошибками")
-        logger.debug(f"Детали прогресса: {progress_data}")
-        
-        return progress_data
-    except Exception as e:
-        duration = time.time() - start_time
-        log_performance("load_progress_data", duration, f"file={progress_file}, success=False")
-        log_error_with_context(e, {"progress_file": str(progress_file), "operation": "load_progress_data"})
-        return {}
-
-
-def save_progress_data(output_dir: Path, processed_urls: List[str], failed_urls: List[str]) -> None:
-    """
-    Сохраняет данные о прогрессе в файл.
+    # Загружаем прогресс если нужно
+    if args.resume:
+        if progress_manager.load_progress():
+            logger.info("Прогресс успешно загружен для возобновления")
+        else:
+            logger.warning("Не удалось загрузить прогресс, начинается обработка с начала")
     
-    Аргументы:
-        output_dir: Директория вывода
-        processed_urls: Список успешно обработанных URL
-        failed_urls: Список URL с ошибками
-    """
-    start_time = time.time()
-    log_function_call("save_progress_data", (str(output_dir),), {
-        "processed_count": len(processed_urls),
-        "failed_count": len(failed_urls)
-    })
-    
-    progress_data = {
-        'timestamp': datetime.now().isoformat(),
-        'processed_urls': processed_urls,
-        'failed_urls': failed_urls
-    }
-    
-    progress_file = output_dir / "progress.json"
-    
-    try:
-        with open(progress_file, 'w', encoding='utf-8') as f:
-            json.dump(progress_data, f, indent=2, ensure_ascii=False)
-        
-        duration = time.time() - start_time
-        log_performance("save_progress_data", duration, f"file={progress_file}")
-        logger.info(f"Прогресс сохранен: {len(processed_urls)} обработано, {len(failed_urls)} с ошибками")
-        
-    except Exception as e:
-        duration = time.time() - start_time
-        log_performance("save_progress_data", duration, f"file={progress_file}, success=False")
-        log_error_with_context(e, {"progress_file": str(progress_file), "operation": "save_progress_data"})
+    return progress_manager
 
 
 async def process_single_bookmark(
     bookmark: Bookmark,
     fetcher: ContentFetcher,
     summarizer: ContentSummarizer,
-    processed_urls: Set[str],
-    failed_urls: Set[str]
+    progress_manager: ProgressManager,
+    folder_path: List[str]
 ) -> Optional[ProcessedPage]:
     """
     Обрабатывает одну закладку.
@@ -216,14 +173,18 @@ async def process_single_bookmark(
         bookmark: Закладка для обработки
         fetcher: Загрузчик контента
         summarizer: Генератор описаний
-        processed_urls: Множество обработанных URL
-        failed_urls: Множество URL с ошибками
+        progress_manager: Менеджер прогресса
+        folder_path: Путь в иерархии папок
         
     Возвращает:
         Optional[ProcessedPage]: Обработанная страница или None при ошибке
     """
     start_time = time.time()
     log_function_call("process_single_bookmark", (bookmark.title,), {"url": bookmark.url})
+    
+    # Получаем множества обработанных и неудачных URL
+    processed_urls = progress_manager.get_processed_urls()
+    failed_urls = progress_manager.get_failed_urls()
     
     # Пропускаем уже обработанные URL
     if bookmark.url in processed_urls:
@@ -242,15 +203,17 @@ async def process_single_bookmark(
         # Загрузка контента
         html = await fetcher.fetch_content(bookmark.url)
         if not html:
-            logger.warning(f"Не удалось загрузить контент: {bookmark.url}")
-            failed_urls.add(bookmark.url)
+            error_msg = f"Не удалось загрузить контент: {bookmark.url}"
+            logger.warning(error_msg)
+            progress_manager.add_failed_bookmark(bookmark, error_msg, folder_path)
             return None
         
         # Извлечение текста
         text = fetcher.extract_text(html)
         if not text:
-            logger.warning(f"Не удалось извлечь текст из контента: {bookmark.url}")
-            failed_urls.add(bookmark.url)
+            error_msg = f"Не удалось извлечь текст из контента: {bookmark.url}"
+            logger.warning(error_msg)
+            progress_manager.add_failed_bookmark(bookmark, error_msg, folder_path)
             return None
         
         # Генерация описания
@@ -264,8 +227,6 @@ async def process_single_bookmark(
             fetch_date=datetime.now(),
             status='success'
         )
-        
-        processed_urls.add(bookmark.url)
         
         duration = time.time() - start_time
         log_performance("process_single_bookmark", duration, f"title={bookmark.title}, success=True")
@@ -281,20 +242,21 @@ async def process_single_bookmark(
             "bookmark_url": bookmark.url,
             "operation": "process_single_bookmark"
         })
-        failed_urls.add(bookmark.url)
+        progress_manager.add_failed_bookmark(bookmark, str(e), folder_path)
         return None
 
 
 async def traverse_and_process_folder(
     folder: BookmarkFolder,
     base_path: Path,
+    folder_path_list: List[str],
     fetcher: ContentFetcher,
     summarizer: ContentSummarizer,
     writer: FileSystemWriter,
-    processed_urls: Set[str],
-    failed_urls: Set[str],
+    progress_manager: ProgressManager,
     progress_tracker: ProgressTracker,
-    dry_run: bool = False
+    dry_run: bool = False,
+    resume_position: Optional[Tuple[List[str], int]] = None
 ) -> Tuple[int, int]:
     """
     Рекурсивно обходит папку и обрабатывает закладки.
@@ -302,13 +264,14 @@ async def traverse_and_process_folder(
     Аргументы:
         folder: Текущая папка
         base_path: Базовый путь для сохранения файлов
+        folder_path_list: Список путей в иерархии папок
         fetcher: Загрузчик контента
         summarizer: Генератор описаний
         writer: Файловый писатель
-        processed_urls: Множество обработанных URL
-        failed_urls: Множество URL с ошибками
+        progress_manager: Менеджер прогресса
         progress_tracker: Трекер прогресса
         dry_run: Флаг режима без обработки контента
+        resume_position: Позиция для возобновления (путь, индекс)
         
     Возвращает:
         Tuple[int, int]: (количество обработанных, количество с ошибками)
@@ -316,6 +279,7 @@ async def traverse_and_process_folder(
     start_time = time.time()
     log_function_call("traverse_and_process_folder", (folder.name,), {
         "base_path": str(base_path),
+        "folder_path": "/".join(folder_path_list),
         "bookmarks_count": len(folder.bookmarks),
         "children_count": len(folder.children),
         "dry_run": dry_run
@@ -326,23 +290,54 @@ async def traverse_and_process_folder(
     folder_path.mkdir(parents=True, exist_ok=True)
     logger.debug(f"Создана папка в файловой системе: {folder_path}")
     
+    # Обновляем путь в иерархии
+    current_folder_path = folder_path_list + [folder.name]
+    
     processed_count = 0
     failed_count = 0
     
+    # Определяем начальный индекс для возобновления
+    start_index = 0
+    if resume_position and resume_position[0] == current_folder_path:
+        start_index = resume_position[1]
+        logger.info(f"Возобновление обработки папки '{folder.name}' с индекса {start_index}")
+    
     # Обрабатываем закладки в текущей папке
     for i, bookmark in enumerate(folder.bookmarks):
+        # Пропускаем обработанные закладки при возобновлении
+        if i < start_index:
+            continue
+            
         progress_tracker.update(0, bookmark.title)
+        
+        # Обновляем текущую позицию
+        progress_manager.update_current_position(current_folder_path, i, len(folder.bookmarks))
+        
+        # Проверяем, не обработана ли уже эта закладка
+        processed_urls = progress_manager.get_processed_urls()
+        failed_urls = progress_manager.get_failed_urls()
+        
+        if bookmark.url in processed_urls:
+            logger.debug(f"Пропуск уже обработанного URL: {bookmark.url}")
+            continue
+        
+        if bookmark.url in failed_urls:
+            logger.debug(f"Пропуск URL с предыдущей ошибкой: {bookmark.url}")
+            failed_count += 1
+            continue
         
         if dry_run:
             # В режиме dry-run только логируем закладки
             logger.info(f"[DRY-RUN] Закладка {i+1}/{len(folder.bookmarks)}: {bookmark.title} - {bookmark.url}")
             processed_count += 1
             progress_tracker.update(1)
+            # В dry-run режиме также добавляем закладку в прогресс
+            progress_manager.add_processed_bookmark(bookmark, f"{bookmark.title}.md", current_folder_path)
             continue
         
         # Обрабатываем закладку
         page = await process_single_bookmark(
-            bookmark, fetcher, summarizer, processed_urls, failed_urls
+            bookmark, fetcher, summarizer, progress_manager, current_folder_path
         )
         
         if page:
@@ -353,6 +348,9 @@ async def traverse_and_process_folder(
             
             # Сохраняем файл
             writer.write_markdown(page, file_path)
+            
+            # Добавляем в прогресс
+            progress_manager.add_processed_bookmark(bookmark, str(file_path), current_folder_path)
             processed_count += 1
         else:
             failed_count += 1
@@ -362,8 +360,8 @@ async def traverse_and_process_folder(
     # Рекурсивно обрабатываем вложенные папки
     for child_folder in folder.children:
         child_processed, child_failed = await traverse_and_process_folder(
-            child_folder, folder_path, fetcher, summarizer, writer,
-            processed_urls, failed_urls, progress_tracker, dry_run
+            child_folder, folder_path, current_folder_path, fetcher, summarizer, writer,
+            progress_manager, progress_tracker, dry_run, resume_position
         )
         processed_count += child_processed
         failed_count += child_failed
@@ -378,7 +376,8 @@ async def traverse_and_process_folder(
 async def process_bookmarks(
     args: argparse.Namespace,
     config,
-    root_folder: BookmarkFolder
+    root_folder: BookmarkFolder,
+    bookmarks_file: str
 ) -> Tuple[int, int]:
     """
     Основная функция обработки закладок.
@@ -387,6 +386,7 @@ async def process_bookmarks(
         args: Аргументы командной строки
         config: Объект конфигурации
         root_folder: Корневая папка закладок
+        bookmarks_file: Путь к файлу закладок
         
     Возвращает:
         Tuple[int, int]: (количество обработанных, количество с ошибками)
@@ -400,15 +400,8 @@ async def process_bookmarks(
     
     output_dir = Path(config.output_dir)
     
-    # Загружаем прогресс если нужно
-    processed_urls: Set[str] = set()
-    failed_urls: Set[str] = set()
-    
-    if args.resume:
-        progress_data = load_progress_data(output_dir)
-        processed_urls = set(progress_data.get('processed_urls', []))
-        failed_urls = set(progress_data.get('failed_urls', []))
-        logger.info(f"Загружен прогресс: {len(processed_urls)} обработано, {len(failed_urls)} с ошибками")
+    # Создаем менеджер прогресса
+    progress_manager = create_progress_manager(args, config, bookmarks_file)
     
     # Инициализация компонентов
     writer = FileSystemWriter(config)
@@ -430,20 +423,31 @@ async def process_bookmarks(
     progress_tracker = ProgressTracker(total_bookmarks, "Обработка закладок")
     logger.info(f"Всего закладок к обработке: {total_bookmarks}")
     
+    # Инициализируем статистику в менеджере прогресса
+    progress_manager.initialize_statistics(total_bookmarks)
+    
     if args.dry_run:
         logger.info("Запуск в режиме DRY-RUN (без обработки контента)")
+    
+    # Получаем позицию для возобновления
+    resume_position = None
+    if args.resume:
+        resume_position = progress_manager.get_resume_position()
+        if resume_position:
+            logger.info(f"Возобновление с позиции: {resume_position[0]}, индекс {resume_position[1]}")
     
     # Обрабатываем закладки
     async with ContentFetcher(config) as fetcher:
         summarizer = ContentSummarizer(config)
         
         processed_count, failed_count = await traverse_and_process_folder(
-            root_folder, output_dir, fetcher, summarizer, writer,
-            processed_urls, failed_urls, progress_tracker, args.dry_run
+            root_folder, output_dir, [], fetcher, summarizer, writer,
+            progress_manager, progress_tracker, args.dry_run, resume_position
         )
     
-    # Сохраняем прогресс
-    save_progress_data(output_dir, list(processed_urls), list(failed_urls))
+    # Обновляем статистику и принудительно сохраняем прогресс
+    progress_manager.update_statistics()
+    progress_manager.force_save()
     
     duration = time.time() - start_time
     log_performance("process_bookmarks", duration, f"processed={processed_count}, failed={failed_count}")
@@ -532,7 +536,7 @@ def main() -> None:
         
         # Обработка закладок
         try:
-            processed, failed = asyncio.run(process_bookmarks(args, config, root_folder))
+            processed, failed = asyncio.run(process_bookmarks(args, config, root_folder, str(bookmarks_file)))
             
             duration = time.time() - start_time
             log_performance("main", duration, f"processed={processed}, failed={failed}")

@@ -1,0 +1,14 @@
+{
+  "roots": {
+    "bookmark_bar": {
+      "children": [
+        {
+          "name": "Test",
+          "type": "url",
+          "url": "https://example.com"
+        }
+      ]
+    }
+  },
+  "version": 1
+}

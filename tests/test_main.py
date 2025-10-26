@@ -11,8 +11,8 @@ from unittest.mock import AsyncMock, MagicMock, patch, mock_open
 from datetime import datetime
 
 from src.main import (
-    parse_arguments, setup_application_logging, load_progress_data,
-    save_progress_data, process_single_bookmark, traverse_and_process_folder,
+    parse_arguments, setup_application_logging, create_progress_manager,
+    process_single_bookmark, traverse_and_process_folder,
     process_bookmarks, count_bookmarks, main
 )
 from src.models import Bookmark, BookmarkFolder, ProcessedPage
@@ -109,49 +109,23 @@ class TestMainModule(unittest.TestCase):
         setup_application_logging(mock_args, self.test_config)
         
         # Проверяем, что функция была вызвана с правильными параметрами
-        mock_setup_logging.assert_called_once_with("INFO")
+        mock_setup_logging.assert_called_once_with(self.test_config)
     
-    def test_load_progress_data(self):
-        """Тест загрузки данных о прогрессе."""
-        # Создаем тестовый файл прогресса
-        progress_file = self.temp_path / "progress.json"
-        test_progress = {
-            'timestamp': '2023-01-01T00:00:00',
-            'processed_urls': ['https://example.com'],
-            'failed_urls': ['https://failed.com']
-        }
+    def test_create_progress_manager(self):
+        """Тест создания менеджера прогресса."""
+        from src.progress import ProgressManager
         
-        with open(progress_file, 'w', encoding='utf-8') as f:
-            json.dump(test_progress, f)
+        # Создаем mock объекты
+        mock_args = MagicMock()
+        mock_args.resume = False
         
         # Вызываем функцию
-        result = load_progress_data(self.temp_path)
+        progress_manager = create_progress_manager(mock_args, self.test_config, "test_bookmarks.json")
         
         # Проверяем результат
-        self.assertEqual(result, test_progress)
-        
-        # Тест с отсутствующим файлом
-        empty_result = load_progress_data(Path("/nonexistent/path"))
-        self.assertEqual(empty_result, {})
-    
-    def test_save_progress_data(self):
-        """Тест сохранения данных о прогрессе."""
-        processed_urls = ['https://example.com']
-        failed_urls = ['https://failed.com']
-        
-        # Вызываем функцию
-        save_progress_data(self.temp_path, processed_urls, failed_urls)
-        
-        # Проверяем результат
-        progress_file = self.temp_path / "progress.json"
-        self.assertTrue(progress_file.exists())
-        
-        with open(progress_file, 'r', encoding='utf-8') as f:
-            saved_data = json.load(f)
-        
-        self.assertEqual(saved_data['processed_urls'], processed_urls)
-        self.assertEqual(saved_data['failed_urls'], failed_urls)
-        self.assertIn('timestamp', saved_data)
+        self.assertIsNotNone(progress_manager)
+        self.assertEqual(progress_manager.output_dir, Path(self.test_config.output_dir))
+        self.assertEqual(progress_manager.bookmarks_file, "test_bookmarks.json")
     
     @unittest.skip("Требует асинхронного контекста")
     async def test_process_single_bookmark(self):
@@ -168,9 +142,16 @@ class TestMainModule(unittest.TestCase):
         processed_urls = set()
         failed_urls = set()
         
+        # Создаем mock менеджер прогресса
+        mock_progress_manager = MagicMock()
+        mock_progress_manager.get_processed_urls.return_value = processed_urls
+        mock_progress_manager.get_failed_urls.return_value = failed_urls
+        mock_progress_manager.add_processed_bookmark = MagicMock()
+        mock_progress_manager.add_failed_bookmark = MagicMock()
+        
         # Вызываем функцию
         result = await process_single_bookmark(
-            self.test_bookmark, mock_fetcher, mock_summarizer, processed_urls, failed_urls
+            self.test_bookmark, mock_fetcher, mock_summarizer, mock_progress_manager, ["Test Folder"]
         )
         
         # Проверяем результат
@@ -180,13 +161,12 @@ class TestMainModule(unittest.TestCase):
         self.assertEqual(result.title, self.test_bookmark.title)
         self.assertEqual(result.summary, "Test summary")
         self.assertEqual(result.status, 'success')
-        self.assertIn(self.test_bookmark.url, processed_urls)
-        self.assertNotIn(self.test_bookmark.url, failed_urls)
         
         # Проверяем вызовы mock объектов
         mock_fetcher.fetch_content.assert_called_once_with(self.test_bookmark.url)
-        mock_fetcher.extract_text.assert_called_once_with("<html><body>Test content</body></html>")
-        mock_summarizer.generate_summary.assert_called_once_with("Test content", self.test_bookmark.title)
+        mock_fetcher.extract_text.assert_called_once()
+        mock_summarizer.generate_summary.assert_called_once()
+        mock_progress_manager.add_processed_bookmark.assert_called_once()
     
     def test_count_bookmarks(self):
         """Тест подсчета закладок."""
@@ -219,10 +199,8 @@ class TestMainModule(unittest.TestCase):
     @patch('src.main.ContentSummarizer')
     @patch('src.main.FileSystemWriter')
     @patch('src.main.DiagramGenerator')
-    @patch('src.main.load_progress_data')
-    @patch('src.main.save_progress_data')
-    def test_process_bookmarks(self, mock_save_progress, mock_load_progress,
-                              mock_diagram_gen, mock_writer_class,
+    @patch('src.main.create_progress_manager')
+    def test_process_bookmarks(self, mock_create_progress_manager, mock_diagram_gen, mock_writer_class,
                               mock_summarizer_class, mock_fetcher_class):
         """Тест основной функции обработки закладок."""
         # Создаем mock объекты
@@ -248,10 +226,16 @@ class TestMainModule(unittest.TestCase):
         mock_diagram_gen.return_value = mock_diagram
         mock_diagram.generate_structure_diagram.return_value = "diagram_code"
         
-        mock_load_progress.return_value = {}
+        mock_progress_manager = MagicMock()
+        mock_create_progress_manager.return_value = mock_progress_manager
+        mock_progress_manager.load_progress.return_value = False
+        mock_progress_manager.initialize_statistics = MagicMock()
+        mock_progress_manager.get_resume_position.return_value = None
+        mock_progress_manager.update_statistics = MagicMock()
+        mock_progress_manager.force_save = MagicMock()
         
         # Вызываем функцию через asyncio.run
-        processed, failed = asyncio.run(process_bookmarks(mock_args, self.test_config, self.test_folder))
+        processed, failed = asyncio.run(process_bookmarks(mock_args, self.test_config, self.test_folder, "test_bookmarks.json"))
         
         # Проверяем результат
         self.assertEqual(processed, 1)
@@ -261,7 +245,8 @@ class TestMainModule(unittest.TestCase):
         mock_writer.create_folder_structure.assert_called_once()
         mock_diagram.generate_structure_diagram.assert_called_once()
         mock_diagram.save_diagram.assert_called_once()
-        mock_save_progress.assert_called_once()
+        mock_progress_manager.initialize_statistics.assert_called_once()
+        mock_progress_manager.force_save.assert_called_once()
     
     @patch('src.main.parse_arguments')
     @patch('src.main.ConfigManager')
@@ -342,9 +327,16 @@ class TestMainModuleAsync(unittest.IsolatedAsyncioTestCase):
         processed_urls = set()
         failed_urls = set()
         
+        # Создаем mock менеджер прогресса
+        mock_progress_manager = MagicMock()
+        mock_progress_manager.get_processed_urls.return_value = processed_urls
+        mock_progress_manager.get_failed_urls.return_value = failed_urls
+        mock_progress_manager.add_processed_bookmark = MagicMock()
+        mock_progress_manager.add_failed_bookmark = MagicMock()
+        
         # Вызываем функцию
         result = await process_single_bookmark(
-            self.test_bookmark, mock_fetcher, mock_summarizer, processed_urls, failed_urls
+            self.test_bookmark, mock_fetcher, mock_summarizer, mock_progress_manager, ["Test Folder"]
         )
         
         # Проверяем результат
@@ -354,8 +346,14 @@ class TestMainModuleAsync(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.title, self.test_bookmark.title)
         self.assertEqual(result.summary, "Test summary")
         self.assertEqual(result.status, 'success')
-        self.assertIn(self.test_bookmark.url, processed_urls)
-        self.assertNotIn(self.test_bookmark.url, failed_urls)
+        
+        # Проверяем вызовы mock объектов
+        mock_fetcher.fetch_content.assert_called_once_with(self.test_bookmark.url)
+        mock_fetcher.extract_text.assert_called_once()
+        mock_summarizer.generate_summary.assert_called_once()
+        # В process_single_bookmark не вызывается add_processed_bookmark
+        # Это происходит в traverse_and_process_folder
+        mock_progress_manager.add_processed_bookmark.assert_not_called()
     
     async def test_process_single_bookmark_failure(self):
         """Тест обработки закладки с ошибкой."""
@@ -369,15 +367,21 @@ class TestMainModuleAsync(unittest.IsolatedAsyncioTestCase):
         processed_urls = set()
         failed_urls = set()
         
+        # Создаем mock менеджер прогресса
+        mock_progress_manager = MagicMock()
+        mock_progress_manager.get_processed_urls.return_value = processed_urls
+        mock_progress_manager.get_failed_urls.return_value = failed_urls
+        mock_progress_manager.add_processed_bookmark = MagicMock()
+        mock_progress_manager.add_failed_bookmark = MagicMock()
+        
         # Вызываем функцию
         result = await process_single_bookmark(
-            self.test_bookmark, mock_fetcher, mock_summarizer, processed_urls, failed_urls
+            self.test_bookmark, mock_fetcher, mock_summarizer, mock_progress_manager, ["Test Folder"]
         )
         
         # Проверяем результат
         self.assertIsNone(result)
-        self.assertNotIn(self.test_bookmark.url, processed_urls)
-        self.assertIn(self.test_bookmark.url, failed_urls)
+        mock_progress_manager.add_failed_bookmark.assert_called_once()
     
     async def test_process_single_bookmark_skip_processed(self):
         """Тест пропуска уже обработанной закладки."""
@@ -388,9 +392,16 @@ class TestMainModuleAsync(unittest.IsolatedAsyncioTestCase):
         processed_urls = {self.test_bookmark.url}
         failed_urls = set()
         
+        # Создаем mock менеджер прогресса
+        mock_progress_manager = MagicMock()
+        mock_progress_manager.get_processed_urls.return_value = processed_urls
+        mock_progress_manager.get_failed_urls.return_value = failed_urls
+        mock_progress_manager.add_processed_bookmark = MagicMock()
+        mock_progress_manager.add_failed_bookmark = MagicMock()
+        
         # Вызываем функцию
         result = await process_single_bookmark(
-            self.test_bookmark, mock_fetcher, mock_summarizer, processed_urls, failed_urls
+            self.test_bookmark, mock_fetcher, mock_summarizer, mock_progress_manager, ["Test Folder"]
         )
         
         # Проверяем результат

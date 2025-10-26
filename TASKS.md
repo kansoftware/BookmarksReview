@@ -46,8 +46,15 @@
     - Добавлены тесты для системы логирования: [`tests/test_logger.py`](tests/test_logger.py)
     - Обновлена документация в [`README.md`](README.md)
 
-13. Инкрементальное выполнение и возобновление
+13. Инкрементальное выполнение и возобновление [COMPLETED]
     - Чекпоинты: [`bookmarks_export/progress.json`](bookmarks_export/progress.json)
+    - Реализован модуль [`src/progress.py`](src/progress.py) с ProgressManager
+    - Добавлены unit-тесты: [`tests/test_progress.py`](tests/test_progress.py) (13 passed)
+    - Добавлены интеграционные тесты: [`tests/test_integration_progress.py`](tests/test_integration_progress.py) (4 passed)
+    - Интегрирован в основной workflow: [`src/main.py`](src/main.py)
+    - Поддержка возобновления с флагом --resume
+    - Периодическое сохранение прогресса во время обработки
+    - Проверка совместимости конфигурации через хеш
 
 14. Ограничение параллелизма и rate limit
     - Реализовать Semaphore и rate limiting в: [`src/fetcher.py`](src/fetcher.py), [`src/summarizer.py`](src/summarizer.py)

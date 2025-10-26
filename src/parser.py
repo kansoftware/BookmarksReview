@@ -141,6 +141,16 @@ class BookmarkParser:
         
         logger.debug(f"Обработка узла: type={node_type}, title={title}")
         
+        # Если у узла нет типа, но есть дочерние элементы, считаем его папкой
+        if not node_type and isinstance(node.get("children"), list):
+            node_type = "folder"
+            logger.debug(f"Узел без типа treated как папка: {title}")
+        
+        # Пропускаем пустые узлы
+        if not title:
+            logger.debug(f"Пропуск пустого узла: type={node_type}, title={title}")
+            return None
+        
         # Если это папка
         if node_type == "folder":
             children = []
