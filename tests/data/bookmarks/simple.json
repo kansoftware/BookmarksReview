@@ -1,0 +1,49 @@
+{
+  "checksum": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+  "roots": {
+    "bookmark_bar": {
+      "children": [
+        {
+          "date_added": "13321112345678901",
+          "id": "1",
+          "name": "Python Documentation",
+          "type": "url",
+          "url": "https://docs.python.org/3/"
+        },
+        {
+          "date_added": "13321112345678902",
+          "id": "2",
+          "name": "GitHub",
+          "type": "url",
+          "url": "https://github.com"
+        },
+        {
+          "date_added": "13321112345678903",
+          "id": "3",
+          "name": "Stack Overflow",
+          "type": "url",
+          "url": "https://stackoverflow.com"
+        }
+      ],
+      "date_added": "13321112345678900",
+      "id": "0",
+      "name": "Bookmark Bar",
+      "type": "folder"
+    },
+    "other": {
+      "children": [],
+      "date_added": "13321112345678900",
+      "id": "4",
+      "name": "Other bookmarks",
+      "type": "folder"
+    },
+    "synced": {
+      "children": [],
+      "date_added": "13321112345678900",
+      "id": "5",
+      "name": "Mobile bookmarks",
+      "type": "folder"
+    }
+  },
+  "version": 1
+}

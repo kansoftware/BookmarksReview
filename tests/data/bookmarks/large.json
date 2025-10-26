@@ -1,0 +1,251 @@
+{
+  "checksum": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+  "roots": {
+    "bookmark_bar": {
+      "children": [
+        {
+          "date_added": "13321112345678901",
+          "id": "1",
+          "name": "Python Documentation",
+          "type": "url",
+          "url": "https://docs.python.org/3/"
+        },
+        {
+          "date_added": "13321112345678902",
+          "id": "2",
+          "name": "GitHub",
+          "type": "url",
+          "url": "https://github.com"
+        },
+        {
+          "children": [
+            {
+              "date_added": "13321112345678904",
+              "id": "4",
+              "name": "FastAPI",
+              "type": "url",
+              "url": "https://fastapi.tiangolo.com/"
+            },
+            {
+              "date_added": "13321112345678905",
+              "id": "5",
+              "name": "Django",
+              "type": "url",
+              "url": "https://www.djangoproject.com/"
+            },
+            {
+              "date_added": "13321112345678906",
+              "id": "6",
+              "name": "Flask",
+              "type": "url",
+              "url": "https://flask.palletsprojects.com/"
+            },
+            {
+              "date_added": "13321112345678907",
+              "id": "7",
+              "name": "Tornado",
+              "type": "url",
+              "url": "https://www.tornadoweb.org/"
+            }
+          ],
+          "date_added": "13321112345678903",
+          "id": "3",
+          "name": "Web Frameworks",
+          "type": "folder"
+        },
+        {
+          "children": [
+            {
+              "date_added": "13321112345678909",
+              "id": "9",
+              "name": "NumPy",
+              "type": "url",
+              "url": "https://numpy.org/"
+            },
+            {
+              "date_added": "13321112345678910",
+              "id": "10",
+              "name": "Pandas",
+              "type": "url",
+              "url": "https://pandas.pydata.org/"
+            },
+            {
+              "date_added": "13321112345678911",
+              "id": "11",
+              "name": "Matplotlib",
+              "type": "url",
+              "url": "https://matplotlib.org/"
+            },
+            {
+              "date_added": "13321112345678912",
+              "id": "12",
+              "name": "Scikit-learn",
+              "type": "url",
+              "url": "https://scikit-learn.org/"
+            },
+            {
+              "date_added": "13321112345678913",
+              "id": "13",
+              "name": "TensorFlow",
+              "type": "url",
+              "url": "https://www.tensorflow.org/"
+            },
+            {
+              "date_added": "13321112345678914",
+              "id": "14",
+              "name": "PyTorch",
+              "type": "url",
+              "url": "https://pytorch.org/"
+            }
+          ],
+          "date_added": "13321112345678908",
+          "id": "8",
+          "name": "Data Science",
+          "type": "folder"
+        },
+        {
+          "children": [
+            {
+              "date_added": "13321112345678916",
+              "id": "16",
+              "name": "React",
+              "type": "url",
+              "url": "https://reactjs.org/"
+            },
+            {
+              "date_added": "13321112345678917",
+              "id": "17",
+              "name": "Vue.js",
+              "type": "url",
+              "url": "https://vuejs.org/"
+            },
+            {
+              "date_added": "13321112345678918",
+              "id": "18",
+              "name": "Angular",
+              "type": "url",
+              "url": "https://angular.io/"
+            },
+            {
+              "date_added": "13321112345678919",
+              "id": "19",
+              "name": "jQuery",
+              "type": "url",
+              "url": "https://jquery.com/"
+            }
+          ],
+          "date_added": "13321112345678915",
+          "id": "15",
+          "name": "Frontend",
+          "type": "folder"
+        },
+        {
+          "children": [
+            {
+              "date_added": "13321112345678921",
+              "id": "21",
+              "name": "Docker",
+              "type": "url",
+              "url": "https://www.docker.com/"
+            },
+            {
+              "date_added": "13321112345678922",
+              "id": "22",
+              "name": "Kubernetes",
+              "type": "url",
+              "url": "https://kubernetes.io/"
+            },
+            {
+              "date_added": "13321112345678923",
+              "id": "23",
+              "name": "AWS",
+              "type": "url",
+              "url": "https://aws.amazon.com/"
+            },
+            {
+              "date_added": "13321112345678924",
+              "id": "24",
+              "name": "Google Cloud",
+              "type": "url",
+              "url": "https://cloud.google.com/"
+            },
+            {
+              "date_added": "13321112345678925",
+              "id": "25",
+              "name": "Azure",
+              "type": "url",
+              "url": "https://azure.microsoft.com/"
+            }
+          ],
+          "date_added": "13321112345678920",
+          "id": "20",
+          "name": "DevOps",
+          "type": "folder"
+        }
+      ],
+      "date_added": "13321112345678900",
+      "id": "0",
+      "name": "Bookmark Bar",
+      "type": "folder"
+    },
+    "other": {
+      "children": [
+        {
+          "date_added": "13321112345678927",
+          "id": "27",
+          "name": "Hacker News",
+          "type": "url",
+          "url": "https://news.ycombinator.com/"
+        },
+        {
+          "date_added": "13321112345678928",
+          "id": "28",
+          "name": "Reddit",
+          "type": "url",
+          "url": "https://www.reddit.com/"
+        },
+        {
+          "date_added": "13321112345678929",
+          "id": "29",
+          "name": "Stack Overflow",
+          "type": "url",
+          "url": "https://stackoverflow.com/"
+        },
+        {
+          "date_added": "13321112345678930",
+          "id": "30",
+          "name": "Medium",
+          "type": "url",
+          "url": "https://medium.com/"
+        }
+      ],
+      "date_added": "13321112345678926",
+      "id": "26",
+      "name": "Other bookmarks",
+      "type": "folder"
+    },
+    "synced": {
+      "children": [
+        {
+          "date_added": "13321112345678932",
+          "id": "32",
+          "name": "Twitter",
+          "type": "url",
+          "url": "https://twitter.com/"
+        },
+        {
+          "date_added": "13321112345678933",
+          "id": "33",
+          "name": "LinkedIn",
+          "type": "url",
+          "url": "https://www.linkedin.com/"
+        }
+      ],
+      "date_added": "13321112345678931",
+      "id": "31",
+      "name": "Mobile bookmarks",
+      "type": "folder"
+    }
+  },
+  "version": 1
+}

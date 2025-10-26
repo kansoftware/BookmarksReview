@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сложная тестовая страница</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Этот JavaScript код должен быть исключен при извлечении текста
+        $(document).ready(function() {
+            console.log('Страница загружена');
+            $('.interactive-element').click(function() {
+                alert('Вы кликнули на интерактивный элемент');
+            });
+        });
+        
+        function complexCalculation() {
+            let result = 0;
+            for (let i = 0; i < 1000; i++) {
+                result += Math.sqrt(i) * Math.sin(i);
+            }
+            return result;
+        }
+    </script>
+    <style>
+        /* Эти стили должны быть исключены при извлечении текста */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.1); 
+        }
+        
+        .highlight { 
+            background-color: #ffeb3b; 
+            padding: 2px 4px; 
+            border-radius: 3px; 
+        }
+        
+        .interactive-element { 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+        }
+        
+        .interactive-element:hover { 
+            background-color: #e3f2fd; 
+            transform: translateY(-2px); 
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Сложная тестовая страница для парсинга</h1>
+            <nav>
+                <ul>
+                    <li><a href="#section1">Основной контент</a></li>
+                    <li><a href="#section2">Интерактивные элементы</a></li>
+                    <li><a href="#section3">Таблицы данных</a></li>
+                    <li><a href="#section4">Формы</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <section id="section1">
+                <h2>Основной контент страницы</h2>
+                <article>
+                    <h3>Статья о веб-разработке</h3>
+                    <p>Современная веб-разработка включает в себя множество технологий и подходов. <span class="highlight">HTML5</span> предоставляет семантическую разметку, <span class="highlight">CSS3</span> - мощные средства стилизации, а <span class="highlight">JavaScript</span> - интерактивность.</p>
+                    
+                    <blockquote>
+                        "Лучший код - это тот, который не нужно писать." - Известное программистское изречение
+                    </blockquote>
+                    
+                    <p>При разработке важно учитывать:</p>
+                    <ol>
+                        <li>Производительность приложения</li>
+                        <li>Доступность для пользователей с ограниченными возможностями</li>
+                        <li>Кроссбраузерную совместимость</li>
+                        <li>Оптимизацию для мобильных устройств</li>
+                    </ol>
+                </article>
+            </section>
+
+            <section id="section2">
+                <h2>Интерактивные элементы</h2>
+                <div class="interactive-element" onclick="alert('Интерактивность!')">
+                    <p>Это интерактивный элемент. Нажмите на него для получения дополнительной информации.</p>
+                </div>
+                
+                <details>
+                    <summary>Нажмите для раскрытия дополнительной информации</summary>
+                    <p>Это скрытый контент, который отображается при нажатии на заголовок.</p>
+                </details>
+            </section>
+
+            <section id="section3">
+                <h2>Таблицы данных</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Технология</th>
+                            <th>Тип</th>
+                            <th>Год создания</th>
+                            <th>Популярность</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>HTML</td>
+                            <td>Разметка</td>
+                            <td>1993</td>
+                            <td>Очень высокая</td>
+                        </tr>
+                        <tr>
+                            <td>CSS</td>
+                            <td>Стили</td>
+                            <td>1996</td>
+                            <td>Очень высокая</td>
+                        </tr>
+                        <tr>
+                            <td>JavaScript</td>
+                            <td>Программирование</td>
+                            <td>1995</td>
+                            <td>Очень высокая</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="section4">
+                <h2>Формы</h2>
+                <form>
+                    <fieldset>
+                        <legend>Персональная информация</legend>
+                        <div>
+                            <label for="name">Имя:</label>
+                            <input type="text" id="name" name="name" placeholder="Введите ваше имя">
+                        </div>
+                        <div>
+                            <label for="email">Email:</label>
+                            <input type="email" id="email" name="email" placeholder="ваш@email.com">
+                        </div>
+                        <div>
+                            <label for="message">Сообщение:</label>
+                            <textarea id="message" name="message" rows="4" placeholder="Введите ваше сообщение"></textarea>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="subscribe" name="subscribe">
+                            <label for="subscribe">Подписаться на рассылку</label>
+                        </div>
+                        <button type="submit">Отправить</button>
+                    </fieldset>
+                </form>
+            </section>
+        </main>
+
+        <aside>
+            <h3>Боковая панель</h3>
+            <div class="widget">
+                <h4>Полезные ссылки</h4>
+                <ul>
+                    <li><a href="https://developer.mozilla.org">MDN Web Docs</a></li>
+                    <li><a href="https://www.w3.org">W3C</a></li>
+                    <li><a href="https://github.com">GitHub</a></li>
+                </ul>
+            </div>
+            
+            <div class="widget">
+                <h4>Последние новости</h4>
+                <p>JavaScript продолжает развиваться с появлением новых стандартов ES2022.</p>
+                <p>CSS Grid и Flexbox упрощают создание адаптивных макетов.</p>
+            </div>
+        </aside>
+
+        <footer>
+            <p>&copy; 2023 Сложная тестовая страница. Все права защищены.</p>
+            <address>
+                Контактная информация: test@example.com
+            </address>
+        </footer>
+    </div>
+
+    <script>
+        // Дополнительный JavaScript код
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM полностью загружен');
+            
+            // Анимация элементов при прокрутке
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            });
+            
+            document.querySelectorAll('section').forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+{
+  "checksum": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+  "roots": {
+    "bookmark_bar": {
+      "children": [
+        {
+          "date_added": "13321112345678901",
+          "id": "1",
+          "name": "Python Documentation",
+          "type": "url",
+          "url": "https://docs.python.org/3/"
+        },
+        {
+          "children": [
+            {
+              "date_added": "13321112345678903",
+              "id": "3",
+              "name": "FastAPI",
+              "type": "url",
+              "url": "https://fastapi.tiangolo.com/"
+            },
+            {
+              "date_added": "13321112345678904",
+              "id": "4",
+              "name": "Django",
+              "type": "url",
+              "url": "https://www.djangoproject.com/"
+            },
+            {
+              "children": [
+                {
+                  "date_added": "13321112345678906",
+                  "id": "6",
+                  "name": "pytest",
+                  "type": "url",
+                  "url": "https://docs.pytest.org/"
+                },
+                {
+                  "date_added": "13321112345678907",
+                  "id": "7",
+                  "name": "unittest",
+                  "type": "url",
+                  "url": "https://docs.python.org/3/library/unittest.html"
+                }
+              ],
+              "date_added": "13321112345678905",
+              "id": "5",
+              "name": "Testing",
+              "type": "folder"
+            }
+          ],
+          "date_added": "13321112345678902",
+          "id": "2",
+          "name": "Web Frameworks",
+          "type": "folder"
+        },
+        {
+          "children": [
+            {
+              "date_added": "13321112345678909",
+              "id": "9",
+              "name": "React",
+              "type": "url",
+              "url": "https://reactjs.org/"
+            },
+            {
+              "date_added": "13321112345678910",
+              "id": "10",
+              "name": "Vue.js",
+              "type": "url",
+              "url": "https://vuejs.org/"
+            }
+          ],
+          "date_added": "13321112345678908",
+          "id": "8",
+          "name": "Frontend",
+          "type": "folder"
+        }
+      ],
+      "date_added": "13321112345678900",
+      "id": "0",
+      "name": "Bookmark Bar",
+      "type": "folder"
+    },
+    "other": {
+      "children": [
+        {
+          "date_added": "13321112345678911",
+          "id": "11",
+          "name": "Hacker News",
+          "type": "url",
+          "url": "https://news.ycombinator.com/"
+        }
+      ],
+      "date_added": "13321112345678900",
+      "id": "12",
+      "name": "Other bookmarks",
+      "type": "folder"
+    },
+    "synced": {
+      "children": [],
+      "date_added": "13321112345678900",
+      "id": "13",
+      "name": "Mobile bookmarks",
+      "type": "folder"
+    }
+  },
+  "version": 1
+}

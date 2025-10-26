@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Большая тестовая страница для проверки лимитов</title>
+    <script>
+        // Много JavaScript кода для увеличения размера файла
+        console.log('Начало загрузки страницы');
+        
+        function generateLargeArray() {
+            const largeArray = [];
+            for (let i = 0; i < 10000; i++) {
+                largeArray.push({
+                    id: i,
+                    name: `Элемент ${i}`,
+                    description: `Это описание элемента номер ${i} в большом массиве данных`,
+                    timestamp: new Date().toISOString(),
+                    random: Math.random()
+                });
+            }
+            return largeArray;
+        }
+        
+        function complexCalculation() {
+            let result = 0;
+            for (let i = 0; i < 100000; i++) {
+                result += Math.sqrt(i) * Math.sin(i) * Math.cos(i);
+            }
+            return result;
+        }
+        
+        function processLargeDataset() {
+            const data = generateLargeArray();
+            return data.map(item => ({
+                ...item,
+                processed: true,
+                calculated: complexCalculation()
+            }));
+        }
+        
+        // Функции для работы с DOM
+        function createManyElements() {
+            for (let i = 0; i < 1000; i++) {
+                const div = document.createElement('div');
+                div.className = 'generated-element';
+                div.textContent = `Сгенерированный элемент ${i}`;
+                div.style.display = 'none';
+                document.body.appendChild(div);
+            }
+        }
+        
+        // Обработчики событий
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM загружен');
+            createManyElements();
+            const processedData = processLargeDataset();
+            console.log('Обработано элементов:', processedData.length);
+        });
+        
+        // Дополнительные функции
+        function fibonacci(n) {
+            if (n <= 1) return n;
+            return fibonacci(n - 1) + fibonacci(n - 2);
+        }
+        
+        function factorial(n) {
+            if (n <= 1) return 1;
+            return n * factorial(n - 1);
+        }
+        
+        // Классы и объекты
+        class LargeDataProcessor {
+            constructor() {
+                this.data = [];
+                this.processed = false;
+            }
+            
+            loadData(data) {
+                this.data = data;
+            }
+            
+            process() {
+                this.data = this.data.map(item => ({
+                    ...item,
+                    processed: true,
+                    hash: this.calculateHash(item)
+                }));
+                this.processed = true;
+            }
+            
+            calculateHash(item) {
+                let hash = 0;
+                const str = JSON.stringify(item);
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash;
+            }
+        }
+        
+        // Создание экземпляра
+        const processor = new LargeDataProcessor();
+    </script>
+    <style>
+        /* Много CSS кода для увеличения размера файла */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.1); 
+        }
+        
+        .header { 
+            background: linear-gradient(45deg, #2196F3, #21CBF3); 
+            color: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin-bottom: 20px; 
+            text-align: center; 
+        }
+        
+        .content { 
+            display: grid; 
+            grid-template-columns: 2fr 1fr; 
+            gap: 20px; 
+            margin-bottom: 20px; 
+        }
+        
+        .main-content { 
+            background: #f9f9f9; 
+            padding: 20px; 
+            border-radius: 8px; 
+        }
+        
+        .sidebar { 
+            background: #f0f0f0; 
+            padding: 20px; 
+            border-radius: 8px; 
+        }
+        
+        .card { 
+            background: white; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            transition: transform 0.3s ease, box-shadow 0.3s ease; 
+        }
+        
+        .card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15); 
+        }
+        
+        .button { 
+            background: linear-gradient(45deg, #4CAF50, #45a049); 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+        }
+        
+        .button:hover { 
+            background: linear-gradient(45deg, #45a049, #4CAF50); 
+            transform: scale(1.05); 
+        }
+        
+        .highlight { 
+            background-color: #ffeb3b; 
+            padding: 2px 4px; 
+            border-radius: 3px; 
+        }
+        
+        .text-large { 
+            font-size: 1.2em; 
+        }
+        
+        .text-small { 
+            font-size: 0.8em; 
+        }
+        
+        .text-center { 
+            text-align: center; 
+        }
+        
+        .text-right { 
+            text-align: right; 
+        }
+        
+        .margin-top { 
+            margin-top: 20px; 
+        }
+        
+        .margin-bottom { 
+            margin-bottom: 20px; 
+        }
+        
+        .padding { 
+            padding: 15px; 
+        }
+        
+        .border { 
+            border: 1px solid #ddd; 
+        }
+        
+        .border-radius { 
+            border-radius: 5px; 
+        }
+        
+        /* Медиа-запросы */
+        @media (max-width: 768px) {
+            .content { 
+                grid-template-columns: 1fr; 
+            }
+            
+            .container { 
+                padding: 10px; 
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header { 
+                padding: 10px; 
+            }
+            
+            .card { 
+                padding: 10px; 
+            }
+        }
+        
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        
+        .fade-in { 
+            animation: fadeIn 0.5s ease-out; 
+        }
+        
+        .slide-in { 
+            animation: slideIn 0.3s ease-out; 
+        }
+        
+        /* Скрытые элементы */
+        .generated-element { 
+            display: none; 
+        }
+        
+        .hidden { 
+            display: none; 
+        }
+        
+        .invisible { 
+            visibility: hidden; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Большая тестовая страница для проверки лимитов обработки</h1>
+            <p>Эта страница содержит большое количество контента для тестирования ограничений размера и производительности</p>
+        </header>
+
+        <div class="content">
+            <main class="main-content">
+                <section class="card fade-in">
+                    <h2>Раздел 1: Введение в тестирование производительности</h2>
+                    <p>Тестирование производительности веб-приложений является важной частью разработки. Оно позволяет выявить узкие места и оптимизировать работу системы.</p>
+                    
+                    <h3>Основные метрики производительности</h3>
+                    <ul>
+                        <li><strong>Время загрузки страницы</strong> - время от запроса до полной загрузки</li>
+                        <li><strong>Time to First Byte</strong> - время до получения первого байта данных</li>
+                        <li><strong>First Contentful Paint</strong> - время до отображения первого контента</li>
+                        <li><strong>Largest Contentful Paint</strong> - время до отображения самого большого элемента</li>
+                        <li><strong>Cumulative Layout Shift</strong> - суммарное смещение макета</li>
+                        <li><strong>First Input Delay</strong> - задержка первого взаимодействия</li>
+                    </ul>
+                </section>
+
+                <section class="card fade-in">
+                    <h2>Раздел 2: Методы оптимизации</h2>
+                    <p>Существует множество методов оптимизации веб-приложений:</p>
+                    
+                    <h3>Оптимизация на стороне сервера</h3>
+                    <ol>
+                        <li>Кэширование статических ресурсов</li>
+                        <li>Сжатие данных (gzip, brotli)</li>
+                        <li>Использование CDN</li>
+                        <li>Оптимизация базы данных</li>
+                        <li>Балансировка нагрузки</li>
+                    </ol>
+                    
+                    <h3>Оптимизация на стороне клиента</h3>
+                    <ol>
+                        <li>Минификация CSS и JavaScript</li>
+                        <li>Объединение файлов</li>
+                        <li>Ленивая загрузка изображений</li>
+                        <li>Использование Web Workers</li>
+                        <li>Оптимизация рендеринга</li>
+                    </ol>
+                </section>
+
+                <section class="card fade-in">
+                    <h2>Раздел 3: Инструменты тестирования</h2>
+                    <p>Для тестирования производительности существуют различные инструменты:</p>
+                    
+                    <h3>Браузерные инструменты</h3>
+                    <ul>
+                        <li>Chrome DevTools Performance</li>
+                        <li>Firefox Performance Tools</li>
+                        <li>Safari Web Inspector</li>
+                        <li>Edge F12 Tools</li>
+                    </ul>
+                    
+                    <h3>Онлайн-сервисы</h3>
+                    <ul>
+                        <li>Google PageSpeed Insights</li>
+                        <li>GTmetrix</li>
+                        <li>WebPageTest</li>
+                        <li>Pingdom</li>
+                    </ul>
+                    
+                    <h3>Профессиональные решения</h3>
+                    <ul>
+                        <li>New Relic</li>
+                        <li>DataDog</li>
+                        <li>Dynatrace</li>
+                        <li>AppDynamics</li>
+                    </ul>
+                </section>
+
+                <section class="card fade-in">
+                    <h2>Раздел 4: Практические примеры</h2>
+                    <p>Рассмотрим практические примеры оптимизации:</p>
+                    
+                    <h3>Пример 1: Оптимизация изображений</h3>
+                    <p>Изображения часто составляют большую часть размера страницы. Для их оптимизации можно:</p>
+                    <ul>
+                        <li>Использовать современные форматы (WebP, AVIF)</li>
+                        <li>Применять сжатие с потерями</li>
+                        <li>Создавать несколько размеров для разных устройств</li>
+                        <li>Использовать ленивую загрузку</li>
+                    </ul>
+                    
+                    <h3>Пример 2: Оптимизация JavaScript</h3>
+                    <p>JavaScript может значительно замедлить загрузку страницы. Методы оптимизации:</p>
+                    <ul>
+                        <li>Разделение кода (code splitting)</li>
+                        <li>Удаление неиспользуемого кода (tree shaking)</li>
+                        <li>Асинхронная загрузка</li>
+                        <li>Использование Web Workers</li>
+                    </ul>
+                </section>
+
+                <!-- Дополнительный контент для увеличения размера страницы -->
+                <section class="card fade-in">
+                    <h2>Раздел 5: Дополнительная информация</h2>
+                    <p>Это дополнительный раздел для увеличения размера страницы и тестирования ограничений обработки контента.</p>
+                    
+                    <div class="padding border border-radius margin-bottom">
+                        <h3>Подраздел 5.1</h3>
+                        <p>Содержимое подраздела с дополнительной информацией о тестировании производительности.</p>
+                        <p>Здесь может быть много текста для проверки работы алгоритмов извлечения контента.</p>
+                    </div>
+                    
+                    <div class="padding border border-radius margin-bottom">
+                        <h3>Подраздел 5.2</h3>
+                        <p>Ещё один подраздел с дополнительным контентом.</p>
+                        <p>Этот текст также должен быть обработан корректно при извлечении содержимого страницы.</p>
+                    </div>
+                    
+                    <div class="padding border border-radius margin-bottom">
+                        <h3>Подраздел 5.3</h3>
+                        <p>Третий подраздел с информацией о методах тестирования.</p>
+                        <p>Сюда можно добавить много дополнительной информации для увеличения размера страницы.</p>
+                    </div>
+                </section>
+
+                <!-- Ещё больше контента -->
+                <section class="card fade-in">
+                    <h2>Раздел 6: Расширенные техники оптимизации</h2>
+                    <p>В этом разделе рассматриваются продвинутые методы оптимизации веб-приложений.</p>
+                    
+                    <h3>Серверный рендеринг (SSR)</h3>
+                    <p>Серверный рендеринг позволяет улучшить производительность первоначальной загрузки страницы.</p>
+                    
+                    <h3>Статическая генерация (SSG)</h3>
+                    <p>Статическая генерация создаёт HTML-файлы на этапе сборки, что обеспечивает максимальную производительность.</p>
+                    
+                    <h3>Прогрессивное улучшение</h3>
+                    <p>Методология прогрессивного улучшения обеспечивает работу приложения даже при отключённом JavaScript.</p>
+                    
+                    <h3>Амортизация ресурсов</h3>
+                    <p>Амортизация позволяет плавно обрабатывать пиковые нагрузки без деградации производительности.</p>
+                </section>
+            </main>
+
+            <aside class="sidebar">
+                <div class="card slide-in">
+                    <h3>Быстрые ссылки</h3>
+                    <ul>
+                        <li><a href="#section1">Раздел 1</a></li>
+                        <li><a href="#section2">Раздел 2</a></li>
+                        <li><a href="#section3">Раздел 3</a></li>
+                        <li><a href="#section4">Раздел 4</a></li>
+                        <li><a href="#section5">Раздел 5</a></li>
+                        <li><a href="#section6">Раздел 6</a></li>
+                    </ul>
+                </div>
+                
+                <div class="card slide-in">
+                    <h3>Дополнительные ресурсы</h3>
+                    <ul>
+                        <li><a href="https://developers.google.com/web/fundamentals/performance">Google Web Performance</a></li>
+                        <li><a href="https://web.dev/performance">Web.dev Performance</a></li>
+                        <li><a href="https://w3.org/performance">W3C Performance</a></li>
+                    </ul>
+                </div>
+                
+                <div class="card slide-in">
+                    <h3>Метрики</h3>
+                    <p>Текущие показатели производительности:</p>
+                    <ul>
+                        <li>FCP: 1.2s</li>
+                        <li>LCP: 2.1s</li>
+                        <li>FID: 45ms</li>
+                        <li>CLS: 0.05</li>
+                    </ul>
+                </div>
+            </aside>
+        </div>
+
+        <footer class="card text-center margin-top">
+            <p>&copy; 2023 Большая тестовая страница. Создана для проверки ограничений обработки контента.</p>
+            <p>Размер страницы: более 2 МБ для тестирования лимитов</p>
+        </footer>
+    </div>
+
+    <script>
+        // Дополнительный JavaScript код для увеличения размера файла
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Дополнительный JavaScript код выполняется');
+            
+            // Создание большого объекта данных
+            const largeObject = {
+                metadata: {
+                    version: '1.0.0',
+                    created: new Date().toISOString(),
+                    author: 'Test Author'
+                },
+                data: []
+            };
+            
+            // Заполнение объекта большим количеством данных
+            for (let i = 0; i < 1000; i++) {
+                largeObject.data.push({
+                    id: i,
+                    title: `Элемент данных ${i}`,
+                    description: `Это описание элемента данных номер ${i}. Содержит дополнительную информацию для увеличения размера объекта.`,
+                    content: `Содержимое элемента ${i}. Здесь может быть много текста для увеличения размера данных.`,
+                    tags: [`тег${i}`, `category${i % 10}`, `type${i % 5}`],
+                    timestamp: new Date(Date.now() - i * 1000).toISOString(),
+                    metadata: {
+                        size: Math.random() * 1000,
+                        type: 'test',
+                        priority: i % 3,
+                        processed: false
+                    }
+                });
+            }
+            
+            // Функции обработки данных
+            function processData(data) {
+                return data.map(item => ({
+                    ...item,
+                    processed: true,
+                    hash: calculateHash(item),
+                    size: JSON.stringify(item).length
+                }));
+            }
+            
+            function calculateHash(item) {
+                let hash = 0;
+                const str = JSON.stringify(item);
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return hash.toString(16);
+            }
+            
+            // Обработка данных
+            const processedData = processData(largeObject.data);
+            console.log('Обработано элементов:', processedData.length);
+            
+            // Дополнительные функции
+            function generateReport(data) {
+                const report = {
+                    total: data.length,
+                    processed: data.filter(item => item.processed).length,
+                    averageSize: data.reduce((sum, item) => sum + item.size, 0) / data.length,
+                    largest: data.reduce((max, item) => item.size > max.size ? item : max, data[0]),
+                    smallest: data.reduce((min, item) => item.size < min.size ? item : min, data[0])
+                };
+                return report;
+            }
+            
+            const report = generateReport(processedData);
+            console.log('Отчёт о обработке:', report);
+        });
+    </script>
+</body>
+</html>

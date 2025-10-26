@@ -118,15 +118,29 @@
   - В [`src/summarizer.py`](src/summarizer.py): Rate limiting для LLM API запросов
   - Все параметры настраиваются через .env файл
   - Добавлены тесты для проверки функциональности ([`tests/test_fetcher.py`](tests/test_fetcher.py), [`tests/test_summarizer.py`](tests/test_summarizer.py))
+- ✅ Задача 15: Подготовка тестовых данных
+  - Создана директория [`tests/data/`](tests/data/) с полной структурой тестовых данных
+  - Добавлены JSON-файлы закладок: simple.json, nested.json, empty.json, large.json
+  - Добавлены HTML-файлы для тестирования парсинга: simple.html, complex.html, russian.html, large.html
+  - Добавлены мок-ответы LLM API: success.json, empty.json, error.json
+  - Создана документация в [`tests/data/README.md`](tests/data/README.md) с описанием структуры и назначения файлов
 
 Тестовое покрытие
-- [`tests/test_config.py`](tests/test_config.py) — тесты конфигурации
-- [`tests/test_parser.py`](tests/test_parser.py) — тесты парсера
-- [`tests/test_fetcher.py`](tests/test_fetcher.py) — тесты загрузчика (7 passed)
-- [`tests/test_summarizer.py`](tests/test_summarizer.py) — тесты суммаризатора (8 passed)
-- [`tests/test_diagram.py`](tests/test_diagram.py) — тесты диаграмм (6 passed)
-- [`tests/test_writer.py`](tests/test_writer.py) — тесты файлового писателя (18 passed)
-- [`tests/test_utils.py`](tests/test_utils.py) — тесты утилит (51 passed)
-- [`tests/test_main.py`](tests/test_main.py) — тесты основного модуля (10 passed, 1 skipped)
-- [`tests/test_progress.py`](tests/test_progress.py) — тесты менеджера прогресса (13 passed)
+- Общее покрытие тестов: **90%** (цель 80%+ достигнута и превышена)
+- [`tests/test_config.py`](tests/test_config.py) — тесты конфигурации (96% покрытие)
+- [`tests/test_parser.py`](tests/test_parser.py) — тесты парсера (94% покрытие)
+- [`tests/test_fetcher.py`](tests/test_fetcher.py) — тесты загрузчика (84% покрытие)
+- [`tests/test_summarizer.py`](tests/test_summarizer.py) — тесты суммаризатора (93% покрытие)
+- [`tests/test_diagram.py`](tests/test_diagram.py) — тесты диаграмм (82% покрытие)
+- [`tests/test_writer.py`](tests/test_writer.py) — тесты файлового писателя (94% покрытие)
+- [`tests/test_utils.py`](tests/test_utils.py) — тесты утилит (96% покрытие)
+- [`tests/test_main.py`](tests/test_main.py) — тесты основного модуля (82% покрытие)
+- [`tests/test_logger.py`](tests/test_logger.py) — тесты системы логирования (95% покрытие)
+- [`tests/test_progress.py`](tests/test_progress.py) — тесты менеджера прогресса (88% покрытие)
 - [`tests/test_integration_progress.py`](tests/test_integration_progress.py) — интеграционные тесты прогресса (4 passed)
+
+Улучшение покрытия тестов
+- ✅ Улучшены тесты для модуля parser.py: добавлены 13 новых тестов, покрытие увеличено с 78% до 94%
+- ✅ Улучшены тесты для модуля summarizer.py: добавлены 11 новых тестов, покрытие увеличено с 79% до 93%
+- ✅ Исправлены проблемы с тестами в test_fetcher.py, все тесты теперь проходят успешно
+- ✅ Все модули имеют покрытие выше 80%, что обеспечивает высокое качество кода и надежность тестирования

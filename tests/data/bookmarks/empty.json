@@ -1,0 +1,27 @@
+{
+  "checksum": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+  "roots": {
+    "bookmark_bar": {
+      "children": [],
+      "date_added": "13321112345678900",
+      "id": "0",
+      "name": "Bookmark Bar",
+      "type": "folder"
+    },
+    "other": {
+      "children": [],
+      "date_added": "13321112345678900",
+      "id": "1",
+      "name": "Other bookmarks",
+      "type": "folder"
+    },
+    "synced": {
+      "children": [],
+      "date_added": "13321112345678900",
+      "id": "2",
+      "name": "Mobile bookmarks",
+      "type": "folder"
+    }
+  },
+  "version": 1
+}

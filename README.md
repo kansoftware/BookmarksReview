@@ -117,6 +117,10 @@ python -m src.main bookmarks.json --max-concurrent 5
   - `utils.py` — вспомогательные утилиты
 - `prompts/` — файлы промптов
 - `tests/` — тесты
+  - `data/` — тестовые данные для unit-тестов и интеграционных тестов
+    - `bookmarks/` — JSON-файлы закладок Chrome
+    - `html/` — HTML-файлы для тестирования парсинга
+    - `responses/` — мок-ответы LLM API
 - `.kilocode/` — документация проекта
 
 ## Особенности
