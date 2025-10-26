@@ -62,8 +62,9 @@
 - [`requirements-dev.txt`](requirements-dev.txt:11) ruff
 
 Важные замечания по текущему состоянию
-- .env.example в проекте не соответствует ожидаемым ключам из конфигурации; рекомендуется синхронизировать с ТЗ.
+- .env.example обновлен и теперь полностью соответствует техническому заданию и ожидаемым ключам из конфигурации.
 - В парсере корректно преобразован Chrome timestamp (микросекунды от 1601-01-01) к Unix времени.
+- Исправлена проблема с циклическим импортом между src/config.py и src/logger.py через использование TYPE_CHECKING.
 
 Выполненные задачи (статус)
 - ✅ Задача 1: Инициализация проекта и каркас директорий
@@ -86,6 +87,20 @@
   - Уровни логирования: DEBUG, INFO, WARNING, ERROR, CRITICAL
   - Ротация логов: 10 МБ, 5 резервных копий
   - Удобные функции: log_function_call(), log_performance(), log_error_with_context()
+- ✅ Обновление .env.example в соответствии с ТЗ
+  - Файл [.env.example](.env.example) полностью обновлен в соответствии с техническим заданием
+  - Добавлены все необходимые параметры: LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_MAX_TOKENS, LLM_TEMPERATURE, LLM_RATE_LIMIT
+  - Добавлены параметры загрузки контента: FETCH_TIMEOUT, FETCH_MAX_CONCURRENT, FETCH_MAX_SIZE_MB, FETCH_RETRY_ATTEMPTS, FETCH_RETRY_DELAY
+  - Добавлены параметры вывода: OUTPUT_DIR, MARKDOWN_INCLUDE_METADATA, GENERATE_MERMAID_DIAGRAM
+  - Добавлены параметры логирования: LOG_LEVEL, LOG_FILE
+  - Добавлены примеры конфигурации для разных провайдеров (OpenRouter, OpenAI, Anthropic)
+- ✅ Обновление документации в README.md
+  - Расширен раздел "Настройка" с подробным описанием всех параметров
+  - Добавлены примеры конфигурации для различных LLM провайдеров
+  - Указаны значения по умолчанию для всех параметров
+- ✅ Исправление циклического импорта в src/logger.py
+  - Использован TYPE_CHECKING для разрешения циклической зависимости между src/config.py и src/logger.py
+  - Обновлены аннотации типов для корректной работы с импортами
 
 Тестовое покрытие
 - [`tests/test_config.py`](tests/test_config.py) — тесты конфигурации

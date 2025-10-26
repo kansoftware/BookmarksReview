@@ -18,10 +18,58 @@ pip install -r requirements.txt
 ```
 
 ## Настройка
-Создайте файл `.env` на основе `.env.example` и укажите:
+
+Создайте файл `.env` на основе `.env.example` и настройте параметры:
+
+### Обязательные параметры
 - `LLM_API_KEY` — API-ключ для LLM провайдера
-- `LLM_BASE_URL` — URL API (например, OpenRouter)
-- Другие параметры конфигурации
+- `PROMPT_FILE` — путь к файлу с промптом (по умолчанию `./prompts/summarize_prompt.txt`)
+
+### Конфигурация LLM API
+- `LLM_BASE_URL` — URL API (по умолчанию `https://api.openai.com/v1`)
+- `LLM_MODEL` — название модели (по умолчанию `gpt-4o-mini`)
+- `LLM_MAX_TOKENS` — максимальное количество токенов в ответе (по умолчанию 1000)
+- `LLM_TEMPERATURE` — температура генерации от 0.0 до 1.0 (по умолчанию 0.7)
+- `LLM_RATE_LIMIT` — количество запросов в минуту (по умолчанию 3)
+
+### Примеры конфигурации для разных провайдеров
+
+#### OpenRouter
+```env
+LLM_API_KEY=sk-or-v1-your-key-here
+LLM_BASE_URL=https://openrouter.ai/api/v1
+LLM_MODEL=openai/gpt-4o-mini
+```
+
+#### OpenAI
+```env
+LLM_API_KEY=sk-your-openai-key-here
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL=gpt-4o-mini
+```
+
+#### Anthropic Claude (через OpenRouter)
+```env
+LLM_API_KEY=sk-or-v1-your-key-here
+LLM_BASE_URL=https://openrouter.ai/api/v1
+LLM_MODEL=anthropic/claude-3-haiku
+```
+
+### Настройки загрузки контента
+- `FETCH_TIMEOUT` — таймаут запроса в секундах (по умолчанию 30)
+- `FETCH_MAX_CONCURRENT` — максимальное количество параллельных запросов (по умолчанию 10)
+- `FETCH_MAX_SIZE_MB` — максимальный размер страницы в МБ (по умолчанию 5)
+- `FETCH_RETRY_ATTEMPTS` — количество попыток при ошибке (по умолчанию 3)
+- `FETCH_RETRY_DELAY` — задержка между попытками в секундах (по умолчанию 1.5)
+
+### Настройки вывода
+- `OUTPUT_DIR` — директория для сохранения результатов (по умолчанию `./bookmarks_export`)
+- `MARKDOWN_INCLUDE_METADATA` — включать метаданные в Markdown файлы (true/false, по умолчанию true)
+- `GENERATE_MERMAID_DIAGRAM` — генерировать Mermaid-диаграмму (true/false, по умолчанию true)
+
+### Настройки логирования
+- `LOG_LEVEL` — уровень логирования (DEBUG, INFO, WARNING, ERROR, по умолчанию INFO)
+- `LOG_FILE` — путь к файлу лога (по умолчанию `./bookmarks_export.log`)
 
 ## Использование
 

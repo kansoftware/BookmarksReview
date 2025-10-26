@@ -10,7 +10,10 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 from datetime import datetime
 
-from .config import Config
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .config import Config
 
 
 class LoggerManager:
@@ -41,11 +44,11 @@ class LoggerManager:
         """
         if not self._initialized:
             self._loggers: Dict[str, logging.Logger] = {}
-            self._config: Optional[Config] = None
+            self._config: Optional['Config'] = None
             self._root_logger: Optional[logging.Logger] = None
             LoggerManager._initialized = True
     
-    def setup_logging(self, config: Config) -> None:
+    def setup_logging(self, config: 'Config') -> None:
         """
         Настраивает логирование на основе конфигурации.
         
@@ -198,7 +201,7 @@ def get_logger(name: str) -> logging.Logger:
     return _logger_manager.get_logger(name)
 
 
-def setup_logging(config: Config) -> None:
+def setup_logging(config: 'Config') -> None:
     """
     Настраивает логирование приложения.
     
