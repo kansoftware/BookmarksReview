@@ -85,8 +85,15 @@
       - Модуль summarizer.py: добавлены 11 новых тестов, покрытие увеличено с 79% до 93%
       - Модуль fetcher.py: исправлены проблемы с тестами, все тесты теперь проходят успешно
 
-17. Интеграционные тесты
-    - [`tests/conftest.py`](tests/conftest.py) при необходимости
+17. Интеграционные тесты [COMPLETED]
+    - [`tests/conftest.py`](tests/conftest.py) — общие фикстуры для интеграционных тестов
+    - [`tests/test_integration.py`](tests/test_integration.py) — тесты взаимодействия компонентов (6 passed)
+    - [`tests/test_error_handling_integration.py`](tests/test_error_handling_integration.py) — тесты обработки ошибок (10 passed)
+    - [`tests/test_filesystem_integration.py`](tests/test_filesystem_integration.py) — тесты файловой системы (12 passed)
+    - [`tests/test_diagram_integration.py`](tests/test_diagram_integration.py) — тесты генерации диаграмм (8 passed)
+    - [`tests/test_resume_integration.py`](tests/test_resume_integration.py) — тесты возобновления обработки (9 passed)
+    - [`tests/test_mock_server.py`](tests/test_mock_server.py) — mock-сервер для LLM API (1 skipped)
+    - Всего: 51 passed, 1 skipped интеграционных тестов
 
 18. E2E-тест
     - Прогон реального набора из ~50 ссылок

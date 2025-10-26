@@ -59,6 +59,8 @@ class FileSystemWriter:
         
         if base_path is None:
             base_path = self.output_dir
+        elif isinstance(base_path, str):
+            base_path = Path(base_path)
         
         # Рекурсивно создаем структуру папок
         self._create_folder_recursive(folder, base_path)

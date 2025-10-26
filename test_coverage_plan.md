@@ -8,6 +8,8 @@
 
 **Общее покрытие тестов: 90%** (цель 80%+ достигнута и превышена)
 
+**Интеграционные тесты: 219 passed, 2 skipped** (все интеграционные тесты успешно проходят)
+
 ### Покрытие по модулям
 
 1. **test_config.py** - 96% покрытия
@@ -153,10 +155,18 @@
 ### Этап 2: Добавление новых тестовых сценариев [COMPLETED]
 
 1. **Интеграционные тесты** [COMPLETED]
-   - ✅ Созданы тесты для взаимодействия между модулями
-   - ✅ Протестирован полный цикл обработки закладок
-   - ✅ Проверена обработка различных сценариев ошибок
-   - Добавлены тесты в [`tests/test_integration_progress.py`](tests/test_integration_progress.py)
+    - ✅ Созданы тесты для взаимодействия между модулями
+    - ✅ Протестирован полный цикл обработки закладок
+    - ✅ Проверена обработка различных сценариев ошибок
+    - ✅ Создан [`tests/conftest.py`](tests/conftest.py) с общими фикстурами
+    - ✅ Реализован mock-сервер для имитации LLM API ([`tests/test_mock_server.py`](tests/test_mock_server.py))
+    - ✅ Добавлены тесты генерации Mermaid-диаграмм ([`tests/test_diagram_integration.py`](tests/test_diagram_integration.py))
+    - ✅ Протестировано создание файловой структуры ([`tests/test_filesystem_integration.py`](tests/test_filesystem_integration.py))
+    - ✅ Добавлены тесты обработки ошибок и восстановления ([`tests/test_error_handling_integration.py`](tests/test_error_handling_integration.py))
+    - ✅ Протестировано инкрементальное выполнение ([`tests/test_resume_integration.py`](tests/test_resume_integration.py))
+    - ✅ Создан основной файл интеграционных тестов ([`tests/test_integration.py`](tests/test_integration.py))
+    - ✅ Создана документация по интеграционным тестам ([`integration_tests_documentation.md`](integration_tests_documentation.md))
+    - Результат: 219 passed, 2 skipped интеграционных тестов
 
 2. **Тесты производительности** [COMPLETED]
    - ✅ Добавлены тесты для проверки производительности
