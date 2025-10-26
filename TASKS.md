@@ -56,7 +56,7 @@
     - Периодическое сохранение прогресса во время обработки
     - Проверка совместимости конфигурации через хеш
 
-14. Ограничение параллелизма и rate limit
+14. Ограничение параллелизма и rate limit [COMPLETED]
     - Реализовать Semaphore и rate limiting в: [`src/fetcher.py`](src/fetcher.py), [`src/summarizer.py`](src/summarizer.py)
 
 15. Подготовка тестовых данных

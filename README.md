@@ -122,9 +122,10 @@ python -m src.main bookmarks.json --max-concurrent 5
 ## Особенности
 
 ### Асинхронная обработка
-- Параллельная загрузка до 10 страниц одновременно
-- Rate limiting для LLM API
+- Параллельная загрузка до 10 страниц одновременно (настраивается через FETCH_MAX_CONCURRENT)
+- Rate limiting для HTTP-запросов и LLM API
 - Graceful degradation при ошибках
+- Semaphore для контроля параллелизма
 
 ### Управление прогрессом
 - Сохранение прогресса в `bookmarks_export/progress.json`

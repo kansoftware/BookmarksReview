@@ -4,6 +4,7 @@
 import asyncio
 import tempfile
 import os
+import pytest
 from unittest.mock import AsyncMock, patch
 from src.fetcher import ContentFetcher
 from src.config import ConfigManager
@@ -141,20 +142,84 @@ FETCH_MAX_SIZE_MB=1
         os.unlink(temp_env_path)
 
 
-def test_rate_limiting():
+@pytest.mark.asyncio
+async def test_rate_limiting():
     """Тестирует ограничение частоты запросов"""
-    config_manager = ConfigManager(env_path=".env.example")
-    config = config_manager.get()
-    
-    # Устанавливаем лимит в 2 запроса в секунду для теста
-    config.fetch_max_concurrent = 2
-    
-    fetcher = ContentFetcher(config)
-    
-    # Проверяем, что параметр конфигурации установлен корректно
-    assert fetcher.config.fetch_max_concurrent == 2
-    
-    print("Тест ограничения частоты запросов пройден успешно!")
+    # Создаем временные файлы: промпт и .env
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as temp_prompt:
+        temp_prompt.write("test")
+        prompt_path = temp_prompt.name
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.env') as temp_env:
+        temp_env.write(f"""
+LLM_API_KEY=test_key
+PROMPT_FILE={prompt_path}
+LLM_RATE_LIMIT=10
+""")
+        temp_env_path = temp_env.name
+
+    try:
+        config_manager = ConfigManager(env_path=temp_env_path)
+        config = config_manager.get()
+        
+        fetcher = ContentFetcher(config)
+        
+        # Проверяем, что параметр конфигурации установлен корректно
+        assert fetcher.config.llm_rate_limit == 10
+        
+        # Проверяем работу rate limiting - тестируем сам механизм
+        # Изначально список запросов пуст
+        assert len(fetcher.request_times) == 0
+        
+        # Выполняем вызов _rate_limit
+        await fetcher._rate_limit()
+        
+        # Проверяем, что время запроса добавлено в список
+        assert len(fetcher.request_times) == 1
+        
+        # Выполняем еще несколько вызовов
+        await fetcher._rate_limit()
+        await fetcher._rate_limit()
+        
+        # Проверяем, что все времена запросов добавлены
+        assert len(fetcher.request_times) == 3
+        
+        print("Тест ограничения частоты запросов пройден успешно!")
+    finally:
+        os.unlink(temp_env_path)
+        os.unlink(prompt_path)
+
+
+@pytest.mark.asyncio
+async def test_concurrent_limiting():
+    """Тестирует ограничение параллельных запросов"""
+    # Создаем временные файлы: промпт и .env
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as temp_prompt:
+        temp_prompt.write("test")
+        prompt_path = temp_prompt.name
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.env') as temp_env:
+        temp_env.write(f"""
+LLM_API_KEY=test_key
+PROMPT_FILE={prompt_path}
+FETCH_MAX_CONCURRENT=2
+""")
+        temp_env_path = temp_env.name
+
+    try:
+        config_manager = ConfigManager(env_path=temp_env_path)
+        config = config_manager.get()
+        
+        fetcher = ContentFetcher(config)
+        
+        # Проверяем, что параметр конфигурации установлен корректно
+        assert fetcher.config.fetch_max_concurrent == 2
+        assert fetcher.semaphore._value == 2  # Внутреннее значение semaphore
+        
+        print("Тест ограничения параллельных запросов пройден успешно!")
+    finally:
+        os.unlink(temp_env_path)
+        os.unlink(prompt_path)
 
 
 def test_retry_mechanism():
@@ -175,9 +240,18 @@ def test_retry_mechanism():
     print("Тест механизма повторных попыток пройден успешно!")
 
 
+@pytest.mark.asyncio
+async def test_async_functions():
+    """Запускает асинхронные тесты"""
+    await test_rate_limiting()
+    await test_concurrent_limiting()
+
+
 if __name__ == "__main__":
     test_url_validation()
     test_text_extraction()
     test_content_size_limit()
-    test_rate_limiting()
     test_retry_mechanism()
+    
+    # Запускаем асинхронные тесты
+    asyncio.run(test_async_functions())

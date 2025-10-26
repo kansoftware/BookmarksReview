@@ -113,12 +113,17 @@
   - Исправлен парсер для обработки узлов без типа, но с дочерними элементами
   - Добавлены unit-тесты (13 тестов) и интеграционные тесты (4 теста)
   - Все тесты проходят успешно
+- ✅ Задача 14: Ограничение параллелизма и rate limit
+  - В [`src/fetcher.py`](src/fetcher.py): Semaphore для ограничения параллельных HTTP-запросов и rate limiting
+  - В [`src/summarizer.py`](src/summarizer.py): Rate limiting для LLM API запросов
+  - Все параметры настраиваются через .env файл
+  - Добавлены тесты для проверки функциональности ([`tests/test_fetcher.py`](tests/test_fetcher.py), [`tests/test_summarizer.py`](tests/test_summarizer.py))
 
 Тестовое покрытие
 - [`tests/test_config.py`](tests/test_config.py) — тесты конфигурации
 - [`tests/test_parser.py`](tests/test_parser.py) — тесты парсера
-- [`tests/test_fetcher.py`](tests/test_fetcher.py) — тесты загрузчика (5 passed)
-- [`tests/test_summarizer.py`](tests/test_summarizer.py) — тесты суммаризатора
+- [`tests/test_fetcher.py`](tests/test_fetcher.py) — тесты загрузчика (7 passed)
+- [`tests/test_summarizer.py`](tests/test_summarizer.py) — тесты суммаризатора (8 passed)
 - [`tests/test_diagram.py`](tests/test_diagram.py) — тесты диаграмм (6 passed)
 - [`tests/test_writer.py`](tests/test_writer.py) — тесты файлового писателя (18 passed)
 - [`tests/test_utils.py`](tests/test_utils.py) — тесты утилит (51 passed)

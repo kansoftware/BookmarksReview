@@ -4,6 +4,7 @@
 import os
 import tempfile
 import asyncio
+import pytest
 from unittest.mock import AsyncMock, patch
 from src.summarizer import ContentSummarizer
 from src.config import ConfigManager
@@ -283,6 +284,63 @@ PROMPT_FILE={temp_prompt_path}
         os.unlink(temp_prompt_path)
 
 
+@pytest.mark.asyncio
+async def test_rate_limiting():
+    """Тестирует ограничение частоты запросов к LLM API"""
+    # Создаем временный файл промпта
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt', prefix='test_prompt_') as temp_prompt:
+        temp_prompt.write("Тестовый шаблон: {title} - {content}")
+        temp_prompt_path = temp_prompt.name
+
+    # Создаем временный .env файл с правильным путем к файлу промпта
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.env') as temp_env:
+        temp_env.write(f"""
+LLM_API_KEY=test_key
+LLM_RATE_LIMIT=10
+PROMPT_FILE={temp_prompt_path}
+""")
+        temp_env_path = temp_env.name
+
+    try:
+        config_manager = ConfigManager(env_path=temp_env_path)
+        config = config_manager.get()
+        
+        summarizer = ContentSummarizer(config)
+        
+        # Проверяем, что параметр конфигурации установлен корректно
+        assert summarizer.config.llm_rate_limit == 10
+        assert summarizer.rate_limit_delay == 60 / 10  # 6 секунд между запросами
+        
+        # Проверяем работу rate limiting - тестируем сам механизм
+        # Изначально список запросов пуст
+        assert len(summarizer.requests_times) == 0
+        
+        # Выполняем вызов _rate_limit
+        await summarizer._rate_limit()
+        
+        # Проверяем, что время запроса добавлено в список
+        assert len(summarizer.requests_times) == 1
+        
+        # Выполняем еще несколько вызовов
+        await summarizer._rate_limit()
+        await summarizer._rate_limit()
+        
+        # Проверяем, что все времена запросов добавлены
+        assert len(summarizer.requests_times) == 3
+        
+        print("Тест ограничения частоты запросов к LLM API пройден успешно!")
+    finally:
+        # Удаляем временные файлы
+        os.unlink(temp_env_path)
+        os.unlink(temp_prompt_path)
+
+
+@pytest.mark.asyncio
+async def test_async_functions():
+    """Запускает асинхронные тесты"""
+    await test_rate_limiting()
+
+
 if __name__ == "__main__":
     test_summarizer_initialization()
     test_prompt_template_loading()
@@ -290,3 +348,6 @@ if __name__ == "__main__":
     test_generate_summary_success()
     test_generate_summary_empty_response()
     test_generate_summary_exception()
+    
+    # Запускаем асинхронные тесты
+    asyncio.run(test_async_functions())
