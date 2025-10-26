@@ -136,6 +136,16 @@
   - Всего: 51 passed, 1 skipped интеграционных тестов
   - Исправлены проблемы с async context managers, mock объектами и логикой обработки ошибок
   - Полная система интеграционных тестов покрывает все основные сценарии использования
+- ✅ Задача 18: E2E-тест
+  - Создан комплексный E2E тест [`tests/test_e2e.py`](tests/test_e2e.py) с тремя основными сценариями:
+    - `test_full_workflow_with_mock_server`: полный цикл обработки от JSON до Markdown (1 passed)
+    - `test_resume_functionality`: тестирование возобновления прерванной обработки (1 passed)
+    - `test_error_handling_and_recovery`: обработка ошибок и восстановление (1 passed)
+  - Подготовлен тестовый набор закладок [`tests/data/bookmarks/e2e_test_bookmarks.json`](tests/data/bookmarks/e2e_test_bookmarks.json) с 78 URL в 6 категориях
+  - Создан специальный .env файл [`tests/.env.e2e`](tests/.env.e2e) с оптимизированными настройками для тестирования
+  - Реализованы мок-серверы для HTTP-запросов и LLM API с использованием pytest-mock
+  - Все E2E тесты проходят успешно в течение <2 секунд
+  - Тесты покрывают полный workflow: парсинг JSON → загрузка контента → генерация описаний → создание файловой структуры → Mermaid-диаграммы
 
 Тестовое покрытие
 - Общее покрытие тестов: **90%** (цель 80%+ достигнута и превышена)
@@ -158,7 +168,8 @@
   - [`tests/test_resume_integration.py`](tests/test_resume_integration.py) — тесты возобновления обработки (9 passed)
   - [`tests/test_integration_progress.py`](tests/test_integration_progress.py) — интеграционные тесты прогресса (4 passed)
   - [`tests/test_mock_server.py`](tests/test_mock_server.py) — mock-сервер для LLM API (1 skipped)
-  - Всего интеграционных тестов: 51 passed, 1 skipped
+  - [`tests/test_e2e.py`](tests/test_e2e.py) — E2E тесты полного workflow (3 passed)
+  - Всего интеграционных тестов: 54 passed, 1 skipped
 
 Улучшение покрытия тестов
 - ✅ Улучшены тесты для модуля parser.py: добавлены 13 новых тестов, покрытие увеличено с 78% до 94%

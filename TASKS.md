@@ -95,8 +95,16 @@
     - [`tests/test_mock_server.py`](tests/test_mock_server.py) — mock-сервер для LLM API (1 skipped)
     - Всего: 51 passed, 1 skipped интеграционных тестов
 
-18. E2E-тест
+18. E2E-тест [COMPLETED]
     - Прогон реального набора из ~50 ссылок
+    - Создан [`tests/test_e2e.py`](tests/test_e2e.py) с тремя E2E тестами (3 passed):
+      - `test_full_workflow_with_mock_server`: полный цикл обработки от JSON до Markdown
+      - `test_resume_functionality`: тестирование возобновления прерванной обработки
+      - `test_error_handling_and_recovery`: обработка ошибок и восстановление
+    - Подготовлен тестовый набор [`tests/data/bookmarks/e2e_test_bookmarks.json`](tests/data/bookmarks/e2e_test_bookmarks.json) с 78 URL в 6 категориях
+    - Создан специальный .env файл [`tests/.env.e2e`](tests/.env.e2e) с оптимизированными настройками для тестирования
+    - Реализованы мок-серверы для HTTP-запросов и LLM API с использованием pytest-mock
+    - Все тесты проходят успешно в течение <2 секунд
 
 19. Статический анализ и типизация
     - Описать конфиги и/или добавить [`pyproject.toml`](pyproject.toml); документация в [`README.md`](README.md)

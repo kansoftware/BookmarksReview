@@ -1,0 +1,343 @@
+{
+  "checksum": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+  "roots": {
+    "bookmark_bar": {
+      "children": [
+        {
+          "date_added": "13321112345678901",
+          "id": "1",
+          "name": "Python Documentation",
+          "type": "url",
+          "url": "https://docs.python.org/3/"
+        },
+        {
+          "date_added": "13321112345678902",
+          "id": "2",
+          "name": "GitHub",
+          "type": "url",
+          "url": "https://github.com"
+        },
+        {
+          "children": [
+            {
+              "date_added": "13321112345678904",
+              "id": "4",
+              "name": "FastAPI",
+              "type": "url",
+              "url": "https://fastapi.tiangolo.com/"
+            },
+            {
+              "date_added": "13321112345678905",
+              "id": "5",
+              "name": "Django",
+              "type": "url",
+              "url": "https://www.djangoproject.com/"
+            },
+            {
+              "date_added": "13321112345678906",
+              "id": "6",
+              "name": "Flask",
+              "type": "url",
+              "url": "https://flask.palletsprojects.com/"
+            },
+            {
+              "date_added": "13321112345678907",
+              "id": "7",
+              "name": "Tornado",
+              "type": "url",
+              "url": "https://www.tornadoweb.org/"
+            },
+            {
+              "date_added": "13321112345678908",
+              "id": "8",
+              "name": "Starlette",
+              "type": "url",
+              "url": "https://www.starlette.io/"
+            }
+          ],
+          "date_added": "13321112345678903",
+          "id": "3",
+          "name": "Web Frameworks",
+          "type": "folder"
+        },
+        {
+          "children": [
+            {
+              "date_added": "13321112345678910",
+              "id": "10",
+              "name": "NumPy",
+              "type": "url",
+              "url": "https://numpy.org/"
+            },
+            {
+              "date_added": "13321112345678911",
+              "id": "11",
+              "name": "Pandas",
+              "type": "url",
+              "url": "https://pandas.pydata.org/"
+            },
+            {
+              "date_added": "13321112345678912",
+              "id": "12",
+              "name": "Matplotlib",
+              "type": "url",
+              "url": "https://matplotlib.org/"
+            },
+            {
+              "date_added": "13321112345678913",
+              "id": "13",
+              "name": "Scikit-learn",
+              "type": "url",
+              "url": "https://scikit-learn.org/"
+            },
+            {
+              "date_added": "13321112345678914",
+              "id": "14",
+              "name": "TensorFlow",
+              "type": "url",
+              "url": "https://www.tensorflow.org/"
+            },
+            {
+              "date_added": "13321112345678915",
+              "id": "15",
+              "name": "PyTorch",
+              "type": "url",
+              "url": "https://pytorch.org/"
+            },
+            {
+              "date_added": "13321112345678916",
+              "id": "16",
+              "name": "Keras",
+              "type": "url",
+              "url": "https://keras.io/"
+            }
+          ],
+          "date_added": "13321112345678909",
+          "id": "9",
+          "name": "Data Science",
+          "type": "folder"
+        },
+        {
+          "children": [
+            {
+              "date_added": "13321112345678918",
+              "id": "18",
+              "name": "React",
+              "type": "url",
+              "url": "https://reactjs.org/"
+            },
+            {
+              "date_added": "13321112345678919",
+              "id": "19",
+              "name": "Vue.js",
+              "type": "url",
+              "url": "https://vuejs.org/"
+            },
+            {
+              "date_added": "13321112345678920",
+              "id": "20",
+              "name": "Angular",
+              "type": "url",
+              "url": "https://angular.io/"
+            },
+            {
+              "date_added": "13321112345678921",
+              "id": "21",
+              "name": "jQuery",
+              "type": "url",
+              "url": "https://jquery.com/"
+            },
+            {
+              "date_added": "13321112345678922",
+              "id": "22",
+              "name": "Bootstrap",
+              "type": "url",
+              "url": "https://getbootstrap.com/"
+            },
+            {
+              "date_added": "13321112345678923",
+              "id": "23",
+              "name": "Tailwind CSS",
+              "type": "url",
+              "url": "https://tailwindcss.com/"
+            }
+          ],
+          "date_added": "13321112345678917",
+          "id": "17",
+          "name": "Frontend",
+          "type": "folder"
+        },
+        {
+          "children": [
+            {
+              "date_added": "13321112345678925",
+              "id": "25",
+              "name": "Docker",
+              "type": "url",
+              "url": "https://www.docker.com/"
+            },
+            {
+              "date_added": "13321112345678926",
+              "id": "26",
+              "name": "Kubernetes",
+              "type": "url",
+              "url": "https://kubernetes.io/"
+            },
+            {
+              "date_added": "13321112345678927",
+              "id": "27",
+              "name": "AWS",
+              "type": "url",
+              "url": "https://aws.amazon.com/"
+            },
+            {
+              "date_added": "13321112345678928",
+              "id": "28",
+              "name": "Google Cloud",
+              "type": "url",
+              "url": "https://cloud.google.com/"
+            },
+            {
+              "date_added": "13321112345678929",
+              "id": "29",
+              "name": "Azure",
+              "type": "url",
+              "url": "https://azure.microsoft.com/"
+            },
+            {
+              "date_added": "13321112345678930",
+              "id": "30",
+              "name": "Terraform",
+              "type": "url",
+              "url": "https://www.terraform.io/"
+            },
+            {
+              "date_added": "13321112345678931",
+              "id": "31",
+              "name": "Ansible",
+              "type": "url",
+              "url": "https://www.ansible.com/"
+            }
+          ],
+          "date_added": "13321112345678924",
+          "id": "24",
+          "name": "DevOps",
+          "type": "folder"
+        },
+        {
+          "children": [
+            {
+              "date_added": "13321112345678933",
+              "id": "33",
+              "name": "PostgreSQL",
+              "type": "url",
+              "url": "https://www.postgresql.org/"
+            },
+            {
+              "date_added": "13321112345678934",
+              "id": "34",
+              "name": "MongoDB",
+              "type": "url",
+              "url": "https://www.mongodb.com/"
+            },
+            {
+              "date_added": "13321112345678935",
+              "id": "35",
+              "name": "Redis",
+              "type": "url",
+              "url": "https://redis.io/"
+            },
+            {
+              "date_added": "13321112345678936",
+              "id": "36",
+              "name": "Elasticsearch",
+              "type": "url",
+              "url": "https://www.elastic.co/"
+            }
+          ],
+          "date_added": "13321112345678932",
+          "id": "32",
+          "name": "Databases",
+          "type": "folder"
+        },
+        {
+          "children": [
+            {
+              "date_added": "13321112345678938",
+              "id": "38",
+              "name": "Hacker News",
+              "type": "url",
+              "url": "https://news.ycombinator.com/"
+            },
+            {
+              "date_added": "13321112345678939",
+              "id": "39",
+              "name": "Reddit",
+              "type": "url",
+              "url": "https://www.reddit.com/"
+            },
+            {
+              "date_added": "13321112345678940",
+              "id": "40",
+              "name": "Stack Overflow",
+              "type": "url",
+              "url": "https://stackoverflow.com/"
+            },
+            {
+              "date_added": "13321112345678941",
+              "id": "41",
+              "name": "Medium",
+              "type": "url",
+              "url": "https://medium.com/"
+            },
+            {
+              "date_added": "13321112345678942",
+              "id": "42",
+              "name": "Dev.to",
+              "type": "url",
+              "url": "https://dev.to/"
+            }
+          ],
+          "date_added": "13321112345678937",
+          "id": "37",
+          "name": "News & Blogs",
+          "type": "folder"
+        }
+      ],
+      "date_added": "13321112345678900",
+      "id": "0",
+      "name": "Bookmark Bar",
+      "type": "folder"
+    },
+    "other": {
+      "children": [
+        {
+          "date_added": "13321112345678944",
+          "id": "44",
+          "name": "Twitter",
+          "type": "url",
+          "url": "https://twitter.com/"
+        },
+        {
+          "date_added": "13321112345678945",
+          "id": "45",
+          "name": "LinkedIn",
+          "type": "url",
+          "url": "https://www.linkedin.com/"
+        },
+        {
+          "date_added": "13321112345678946",
+          "id": "46",
+          "name": "YouTube",
+          "type": "url",
+          "url": "https://www.youtube.com/"
+        }
+      ],
+      "date_added": "13321112345678943",
+      "id": "43",
+      "name": "Other bookmarks",
+      "type": "folder"
+    }
+  },
+  "version": 1
+}
