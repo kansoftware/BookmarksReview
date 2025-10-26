@@ -47,7 +47,7 @@ PROMPT_FILE=./prompts/summarize_prompt.txt
 LOG_LEVEL=INFO
 LOG_FILE={temp_dir}/test.log
 """)
-    
+
     return str(config_file)
 
 
