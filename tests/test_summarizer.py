@@ -244,25 +244,24 @@ LLM_RATE_LIMIT=2
 PROMPT_FILE={self.temp_prompt_path}
 """)
             temp_env_path = temp_env.name
-        
+
         try:
             config_manager = ConfigManager(env_path=temp_env_path)
             config = config_manager.get()
-            
+
             summarizer = ContentSummarizer(config)
-            
-            # Добавляем запросы, чтобы достичь лимита
+
+            # Добавляем запросы, чтобы достичь лимита и вызвать короткое ожидание
             current_time = time.time()
-            summarizer.requests_times = [current_time - 10, current_time - 5]
-            
+            summarizer.requests_times = [current_time - 59, current_time - 58]  # Почти 60 секунд назад
+
             # Вызываем _rate_limit и измеряем время ожидания
             start_time = time.time()
             await summarizer._rate_limit()
             end_time = time.time()
-            
-            # Проверяем, что было ожидание
-            # Время ожидания должно быть примерно 50 секунд (60 - 10)
-            assert end_time - start_time > 40  # Даем небольшой запас
+
+            # Проверяем, что было ожидание около 1 секунды
+            assert 0.5 < end_time - start_time < 5  # Даем запас на погрешность
         finally:
             os.unlink(temp_env_path)
     
@@ -277,20 +276,25 @@ LLM_RATE_LIMIT=1
 PROMPT_FILE={self.temp_prompt_path}
 """)
             temp_env_path = temp_env.name
-        
+
         try:
             config_manager = ConfigManager(env_path=temp_env_path)
             config = config_manager.get()
-            
+
             summarizer = ContentSummarizer(config)
-            
-            # Добавляем запрос, чтобы достичь лимита
+
+            # Добавляем запрос близко к лимиту времени
             current_time = time.time()
-            summarizer.requests_times = [current_time - 30]  # 30 секунд назад
-            
-            # Вызываем _rate_limit
+            summarizer.requests_times = [current_time - 59]  # Почти 60 секунд назад
+
+            # Вызываем _rate_limit - должно быть короткое ожидание
+            start_time = time.time()
             await summarizer._rate_limit()
-            
+            end_time = time.time()
+
+            # Проверяем, что было короткое ожидание
+            assert 0.5 < end_time - start_time < 5
+
             # Проверяем, что после ожидания список запросов был очищен
             assert len(summarizer.requests_times) == 1
             # И новый запрос был добавлен
