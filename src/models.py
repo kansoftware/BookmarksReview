@@ -3,9 +3,11 @@
 Содержит модели данных для работы с закладками браузера.
 Используется dataclass для удобного представления структур.
 """
+
 from dataclasses import dataclass
-from typing import List, Optional
 from datetime import datetime
+from typing import Optional
+
 from typing_extensions import Literal
 
 
@@ -19,6 +21,7 @@ class Bookmark:
         url: URL-адрес страницы
         date_added: Дата добавления закладки
     """
+
     title: str
     url: str
     date_added: Optional[datetime]
@@ -35,9 +38,10 @@ class BookmarkFolder:
         children: Список вложенных папок
         bookmarks: Список закладок в папке
     """
+
     name: str
-    children: List['BookmarkFolder']
-    bookmarks: List[Bookmark]
+    children: list["BookmarkFolder"]
+    bookmarks: list[Bookmark]
 
 
 @dataclass
@@ -52,8 +56,9 @@ class ProcessedPage:
         fetch_date: Дата обработки
         status: Статус обработки ('success', 'failed', 'skipped')
     """
+
     url: str
     title: str
     summary: str
     fetch_date: datetime
-    status: Literal['success', 'failed', 'skipped']
+    status: Literal["success", "failed", "skipped"]

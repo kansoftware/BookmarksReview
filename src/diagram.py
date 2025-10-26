@@ -4,12 +4,18 @@
 Профиль A: TD; без URL в метках; обрезка меток до 60; пустые папки отображаются;
 лимиты: максимум 1000 узлов; >50 детей в папке — свертка.
 """
+
 import time
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
-from .models import BookmarkFolder, Bookmark
-from .logger import get_logger, log_function_call, log_performance, log_error_with_context
+from .logger import (
+    get_logger,
+    log_error_with_context,
+    log_function_call,
+    log_performance,
+)
+from .models import Bookmark, BookmarkFolder
 
 logger = get_logger(__name__)
 
@@ -24,7 +30,12 @@ class DiagramGenerator:
         max_children_per_folder: Максимум дочерних элементов, отображаемых для одной папки (по умолчанию 50)
     """
 
-    def __init__(self, label_max_len: int = 60, max_nodes: int = 1000, max_children_per_folder: int = 50) -> None:
+    def __init__(
+        self,
+        label_max_len: int = 60,
+        max_nodes: int = 1000,
+        max_children_per_folder: int = 50,
+    ) -> None:
         """
         Инициализация генератора диаграмм.
 
@@ -33,21 +44,27 @@ class DiagramGenerator:
             max_nodes: Максимальное количество узлов в диаграмме
             max_children_per_folder: Сколько детей (папок+закладок) показывать у одной папки до свертки
         """
-        log_function_call("DiagramGenerator.__init__", (), {
-            "label_max_len": label_max_len,
-            "max_nodes": max_nodes,
-            "max_children_per_folder": max_children_per_folder
-        })
-        
+        log_function_call(
+            "DiagramGenerator.__init__",
+            (),
+            {
+                "label_max_len": label_max_len,
+                "max_nodes": max_nodes,
+                "max_children_per_folder": max_children_per_folder,
+            },
+        )
+
         self.label_max_len = label_max_len
         self.max_nodes = max_nodes
         self.max_children_per_folder = max_children_per_folder
         self._counter = 0
         self._nodes_count = 0
         self._limit_emitted = False
-        
-        logger.info(f"DiagramGenerator инициализирован: label_max_len={label_max_len}, "
-                   f"max_nodes={max_nodes}, max_children_per_folder={max_children_per_folder}")
+
+        logger.info(
+            f"DiagramGenerator инициализирован: label_max_len={label_max_len}, "
+            f"max_nodes={max_nodes}, max_children_per_folder={max_children_per_folder}"
+        )
 
     def generate_structure_diagram(self, root: BookmarkFolder) -> str:
         """
@@ -61,23 +78,27 @@ class DiagramGenerator:
         """
         start_time = time.time()
         log_function_call("generate_structure_diagram", (root.name,))
-        
+
         # Сброс счетчиков на случай повторного использования инстанса
         self._counter = 0
         self._nodes_count = 0
         self._limit_emitted = False
 
         logger.debug(f"Начало генерации диаграммы для корневой папки: {root.name}")
-        
-        lines: List[str] = ["graph TD"]
+
+        lines: list[str] = ["graph TD"]
         self._traverse_folder(root, None, lines)
-        
+
         diagram_code = "\n".join(lines)
-        
+
         duration = time.time() - start_time
-        log_performance("generate_structure_diagram", duration, f"nodes={self._nodes_count}")
-        logger.info(f"Диаграмма сгенерирована: {self._nodes_count} узлов за {duration:.2f}с")
-        
+        log_performance(
+            "generate_structure_diagram", duration, f"nodes={self._nodes_count}"
+        )
+        logger.info(
+            f"Диаграмма сгенерирована: {self._nodes_count} узлов за {duration:.2f}с"
+        )
+
         return diagram_code
 
     def save_diagram(self, diagram_code: str, output_path: str) -> None:
@@ -89,28 +110,36 @@ class DiagramGenerator:
             output_path: Путь для сохранения результата
         """
         start_time = time.time()
-        log_function_call("save_diagram", (output_path,), {"diagram_length": len(diagram_code)})
-        
+        log_function_call(
+            "save_diagram", (output_path,), {"diagram_length": len(diagram_code)}
+        )
+
         try:
             path = Path(output_path)
             path.parent.mkdir(parents=True, exist_ok=True)
-            
+
             with path.open("w", encoding="utf-8") as f:
                 f.write("```mermaid\n")
                 f.write(diagram_code)
                 f.write("\n```")
-            
+
             duration = time.time() - start_time
             log_performance("save_diagram", duration, f"path={output_path}")
             logger.info(f"Диаграмма сохранена: {output_path} за {duration:.2f}с")
-            
+
         except Exception as e:
             duration = time.time() - start_time
-            log_performance("save_diagram", duration, f"path={output_path}, success=False")
-            log_error_with_context(e, {"output_path": output_path, "operation": "save_diagram"})
+            log_performance(
+                "save_diagram", duration, f"path={output_path}, success=False"
+            )
+            log_error_with_context(
+                e, {"output_path": output_path, "operation": "save_diagram"}
+            )
             raise
 
-    def _traverse_folder(self, folder: BookmarkFolder, parent_id: Optional[str], lines: List[str]) -> Optional[str]:
+    def _traverse_folder(
+        self, folder: BookmarkFolder, parent_id: Optional[str], lines: list[str]
+    ) -> Optional[str]:
         """
         Рекурсивно обходит папку, добавляет узел папки, её детей и связи.
 
@@ -122,12 +151,16 @@ class DiagramGenerator:
         Возвращает:
             Optional[str]: Идентификатор узла папки или None, если достигнут лимит
         """
-        log_function_call("_traverse_folder", (folder.name,), {
-            "parent_id": parent_id,
-            "children_count": len(folder.children),
-            "bookmarks_count": len(folder.bookmarks)
-        })
-        
+        log_function_call(
+            "_traverse_folder",
+            (folder.name,),
+            {
+                "parent_id": parent_id,
+                "children_count": len(folder.children),
+                "bookmarks_count": len(folder.bookmarks),
+            },
+        )
+
         if self._would_exceed_limit(1):
             logger.debug(f"Достигнут лимит узлов, пропуск папки: {folder.name}")
             self._emit_limit(lines, parent_id)
@@ -147,14 +180,18 @@ class DiagramGenerator:
 
         for child_folder in folder.children:
             if processed >= self.max_children_per_folder or self._limit_emitted:
-                logger.debug(f"Достигнут лимит детей для папки {folder.name}, пропуск подпапок")
+                logger.debug(
+                    f"Достигнут лимит детей для папки {folder.name}, пропуск подпапок"
+                )
                 break
             self._traverse_folder(child_folder, folder_id, lines)
             processed += 1
 
         for bookmark in folder.bookmarks:
             if processed >= self.max_children_per_folder or self._limit_emitted:
-                logger.debug(f"Достигнут лимит детей для папки {folder.name}, пропуск закладок")
+                logger.debug(
+                    f"Достигнут лимит детей для папки {folder.name}, пропуск закладок"
+                )
                 break
             self._add_bookmark(bookmark, folder_id, lines)
             processed += 1
@@ -169,11 +206,15 @@ class DiagramGenerator:
                 collapsed_label = f"... и {omitted} еще"
                 self._add_folder_node(lines, collapsed_id, collapsed_label)
                 self._add_edge(lines, folder_id, collapsed_id)
-                logger.debug(f"Добавлен узел свертки для {folder.name}: {omitted} пропущенных элементов")
+                logger.debug(
+                    f"Добавлен узел свертки для {folder.name}: {omitted} пропущенных элементов"
+                )
 
         return folder_id
 
-    def _add_bookmark(self, bookmark: Bookmark, parent_id: str, lines: List[str]) -> Optional[str]:
+    def _add_bookmark(
+        self, bookmark: Bookmark, parent_id: str, lines: list[str]
+    ) -> Optional[str]:
         """
         Добавляет узел закладки и связь с родителем.
 
@@ -186,22 +227,22 @@ class DiagramGenerator:
             Optional[str]: Идентификатор узла закладки или None, если достигнут лимит
         """
         log_function_call("_add_bookmark", (bookmark.title,), {"parent_id": parent_id})
-        
+
         if self._would_exceed_limit(1):
             logger.debug(f"Достигнут лимит узлов, пропуск закладки: {bookmark.title}")
             self._emit_limit(lines, parent_id)
             return None
-            
+
         node_id = self._next_id("bookmark")
         label = self._sanitize_label(bookmark.title)
         lines.append(f'  {node_id}("{label}")')
         self._nodes_count += 1
         self._add_edge(lines, parent_id, node_id)
-        
+
         logger.debug(f"Добавлен узел закладки: {bookmark.title} (ID: {node_id})")
         return node_id
 
-    def _add_folder_node(self, lines: List[str], node_id: str, label: str) -> None:
+    def _add_folder_node(self, lines: list[str], node_id: str, label: str) -> None:
         """
         Добавляет узел папки с прямоугольной формой.
 
@@ -211,13 +252,13 @@ class DiagramGenerator:
             label: Метка узла (после санитизации/усечения)
         """
         log_function_call("_add_folder_node", (node_id, label))
-        
+
         lines.append(f"  {node_id}[{label}]")
         self._nodes_count += 1
-        
+
         logger.debug(f"Добавлен узел папки: {label} (ID: {node_id})")
 
-    def _add_edge(self, lines: List[str], parent_id: str, child_id: str) -> None:
+    def _add_edge(self, lines: list[str], parent_id: str, child_id: str) -> None:
         """
         Добавляет ребро между двумя узлами.
 
@@ -227,7 +268,7 @@ class DiagramGenerator:
             child_id: Идентификатор дочернего узла
         """
         log_function_call("_add_edge", (parent_id, child_id))
-        
+
         lines.append(f"  {parent_id} --> {child_id}")
         logger.debug(f"Добавлено ребро: {parent_id} --> {child_id}")
 
@@ -243,19 +284,16 @@ class DiagramGenerator:
             str: Санитизированная и, при необходимости, усеченная метка
         """
         log_function_call("_sanitize_label", (text,))
-        
-        if text is None:
-            text = ""
-            
+
         original_length = len(text)
         s = text.replace('"', "'").replace("`", "")
         s = " ".join(s.split())  # свертка пробелов и переносов
         s = s.strip()
-        
+
         if len(s) > self.label_max_len:
             s = s[: self.label_max_len - 3] + "..."
             logger.debug(f"Метка усечена с {original_length} до {len(s)} символов")
-        
+
         logger.debug(f"Метка санитизирована: '{text}' -> '{s}'")
         return s
 
@@ -271,7 +309,7 @@ class DiagramGenerator:
         """
         node_id = f"{kind}_{self._counter}"
         self._counter += 1
-        
+
         logger.debug(f"Сгенерирован ID узла: {node_id} (тип: {kind})")
         return node_id
 
@@ -286,14 +324,16 @@ class DiagramGenerator:
             bool: True, если лимит будет превышен, иначе False
         """
         would_exceed = (self._nodes_count + additional) > self.max_nodes
-        
+
         if would_exceed:
-            logger.debug(f"Превышение лимита узлов: текущих={self._nodes_count}, "
-                        f"добавляемых={additional}, лимит={self.max_nodes}")
-        
+            logger.debug(
+                f"Превышение лимита узлов: текущих={self._nodes_count}, "
+                f"добавляемых={additional}, лимит={self.max_nodes}"
+            )
+
         return would_exceed
 
-    def _emit_limit(self, lines: List[str], parent_id: Optional[str]) -> None:
+    def _emit_limit(self, lines: list[str], parent_id: Optional[str]) -> None:
         """
         Добавляет специальный узел, указывающий на достижение лимита узлов, один раз за генерацию.
 
@@ -304,14 +344,14 @@ class DiagramGenerator:
         if self._limit_emitted:
             logger.debug("Узел лимита уже был добавлен ранее")
             return
-            
+
         limit_label = f"Диаграмма обрезана: достигнут предел {self.max_nodes} узлов"
         limit_id = "limit_reached"
         lines.append(f"  {limit_id}[{limit_label}]")
         self._nodes_count += 1
         self._limit_emitted = True
-        
+
         logger.warning(f"Добавлен узел ограничения: {limit_label}")
-        
+
         if parent_id:
             self._add_edge(lines, parent_id, limit_id)

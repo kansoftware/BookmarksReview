@@ -184,11 +184,71 @@ python -m pytest tests/test_config.py -v
 
 ### Качество кода
 
-Проект использует современные инструменты статического анализа:
-- **mypy** — проверка типов
-- **ruff** — линтер и форматтер
-- **black** — форматирование кода
-- **isort** — сортировка импортов
+Проект использует современные инструменты статического анализа и форматирования:
+
+#### Инструменты статического анализа
+- **mypy** — строгая проверка типов с полным покрытием
+- **ruff** — высокопроизводительный линтер и форматтер (замена flake8, pylint, pyupgrade)
+- **black** — автоматическое форматирование кода (88 символов в строке)
+- **isort** — сортировка импортов по стандартам
+
+#### Запуск инструментов качества кода
+
+```bash
+# Проверка типов
+python -m mypy src/ --config-file pyproject.toml
+
+# Линтинг и исправление ошибок
+python -m ruff check src/ --fix --config pyproject.toml
+
+# Форматирование кода
+python -m black src/ --config pyproject.toml
+
+# Сортировка импортов
+python -m isort src/ --settings-path pyproject.toml
+
+# Запуск всех инструментов качества
+python -m ruff check src/ --fix --config pyproject.toml && \
+python -m black src/ --config pyproject.toml && \
+python -m isort src/ --settings-path pyproject.toml && \
+python -m mypy src/ --config-file pyproject.toml
+```
+
+#### Конфигурация инструментов
+
+Все настройки инструментов находятся в `pyproject.toml`:
+
+```toml
+[tool.mypy]
+python_version = "3.9"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "C90", "I", "N", "UP", "YTT", "S", "BLE", "FBT", "B", "A", "COM", "C4", "DTZ", "T10", "DJ", "EM", "EXE", "FA", "ISC", "ICN", "G", "INP", "PIE", "T20", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SLOT", "SIM", "TID", "TCH", "INT", "ARG", "PTH", "ERA", "PD", "PGH", "PL", "TRY", "FLY", "NPY", "AIR", "PERF", "FURB", "LOG", "RUF"]
+ignore = ["S101", "S104", "COM812", "ISC001"]
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+
+[tool.isort]
+profile = "black"
+line_length = 88
+```
+
+#### Стандарты кодирования
+
+- **Типизация**: 100% типизированный код с использованием mypy strict mode
+- **Форматирование**: Black с длиной строки 88 символов
+- **Импорты**: Сортировка через isort с профилем black
+- **Линтинг**: Ruff с расширенным набором правил (более 60 категорий проверок)
+- **Документация**: Docstrings на русском языке для всех публичных методов
 
 ## Особенности
 
