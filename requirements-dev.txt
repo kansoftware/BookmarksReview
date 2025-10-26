@@ -1,0 +1,11 @@
+pytest
+pytest-asyncio
+pytest-cov
+pytest-mock
+responses
+pylint
+flake8
+mypy
+black
+isort
+ruff
