@@ -35,6 +35,7 @@ class ProcessedBookmark:
     processed_at: str
     file_path: Optional[str] = None
     folder_path: Optional[list[str]] = None
+    error: Optional[str] = None # Поле для хранения ошибки, если закладка была обработана с ошибкой
 
 
 @dataclass
@@ -405,25 +406,43 @@ class ProgressManager:
                 self.statistics.failed_count = len(self.failed_bookmarks)
                 self.statistics.last_update = datetime.now().isoformat()
 
-    def get_processed_urls(self) -> set[str]:
+    def get_processed_urls(self, exclude_with_error: bool = True) -> set[str]:
         """
         Возвращает множество обработанных URL.
+
+        Аргументы:
+            exclude_with_error: Исключать ли URL с полем error
 
         Возвращает:
             set[str]: Множество обработанных URL
         """
         with self._lock:
-            return {item.url for item in self.processed_bookmarks}
+            if exclude_with_error:
+                # Возвращаем только URL без ошибок
+                return {item.url for item in self.processed_bookmarks if not item.error}
+            else:
+                # Возвращаем все URL
+                return {item.url for item in self.processed_bookmarks}
 
-    def get_failed_urls(self) -> set[str]:
+    def get_failed_urls(self, include_error_from_processed: bool = False) -> set[str]:
         """
         Возвращает множество URL с ошибками.
+
+        Аргументы:
+            include_error_from_processed: Включать ли URL из processed_urls с полем error
 
         Возвращает:
             set[str]: Множество URL с ошибками
         """
         with self._lock:
-            return {item.url for item in self.failed_bookmarks}
+            failed_urls = {item.url for item in self.failed_bookmarks}
+            
+            # Если нужно включить URL из processed_urls с полем error
+            if include_error_from_processed:
+                error_urls_from_processed = {item.url for item in self.processed_bookmarks if item.error}
+                failed_urls.update(error_urls_from_processed)
+            
+            return failed_urls
 
     def get_resume_position(self) -> Optional[tuple[list[str], int]]:
         """
@@ -521,7 +540,7 @@ class ProgressManager:
 
     def move_failed_to_processed(self, bookmark: Bookmark, file_path: str, folder_path: list[str]) -> bool:
         """
-        Перемещает закладку из списка неудачных в список обработанных.
+        Перемещает закладку из списка неудачных или из списка обработанных с ошибкой в список обработанных.
 
         Аргументы:
             bookmark: Закладка для перемещения
@@ -537,33 +556,43 @@ class ProgressManager:
             # Удаляем из списка неудачных
             original_failed_count = len(self.failed_bookmarks)
             self.failed_bookmarks = [item for item in self.failed_bookmarks if item.url != bookmark.url]
-            removed = len(self.failed_bookmarks) != original_failed_count
+            removed_from_failed = len(self.failed_bookmarks) != original_failed_count
 
-            if removed:
-                # Добавляем в список обработанных
+            # Также удаляем из списка обработанных с ошибкой (если есть)
+            original_processed_count = len(self.processed_bookmarks)
+            self.processed_bookmarks = [item for item in self.processed_bookmarks if not (item.url == bookmark.url and item.error)]
+            removed_from_processed_with_error = len(self.processed_bookmarks) != original_processed_count
+
+            if removed_from_failed or removed_from_processed_with_error:
+                # Добавляем в список обработанных (без ошибки)
                 processed = ProcessedBookmark(
                     url=bookmark.url,
                     title=bookmark.title,
                     processed_at=datetime.now().isoformat(),
                     file_path=file_path,
                     folder_path=folder_path,
+                    error=None  # Убедимся, что ошибка не сохраняется
                 )
                 self.processed_bookmarks.append(processed)
 
-                logger.info(f"Закладка перемещена из неудачных в обработанные: {bookmark.title}")
+                if removed_from_failed:
+                    logger.info(f"Закладка перемещена из неудачных в обработанные: {bookmark.title}")
+                elif removed_from_processed_with_error:
+                    logger.info(f"Закладка перемещена из обработанных с ошибкой в обработанные: {bookmark.title}")
                 
                 # Сохраняем прогресс
                 self.save_progress()
                 return True
             else:
-                logger.warning(f"Закладка не найдена в списке неудачных: {bookmark.title}")
-                # Добавляем в список обработанных в любом случае, если не найдена в неудачных
+                logger.warning(f"Закладка не найдена в списке неудачных или в списке обработанных с ошибкой: {bookmark.title}")
+                # Добавляем в список обработанных в любом случае, если не найдена в неудачных или в обработанных с ошибкой
                 processed = ProcessedBookmark(
                     url=bookmark.url,
                     title=bookmark.title,
                     processed_at=datetime.now().isoformat(),
                     file_path=file_path,
                     folder_path=folder_path,
+                    error=None  # Убедимся, что ошибка не сохраняется
                 )
                 self.processed_bookmarks.append(processed)
                 self.save_progress()

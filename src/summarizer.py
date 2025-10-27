@@ -8,6 +8,7 @@ import asyncio
 import time
 
 from openai import AsyncOpenAI
+import httpx
 
 from src.config import Config
 from src.logger import (
@@ -35,9 +36,25 @@ class ContentSummarizer:
         log_function_call("ContentSummarizer.__init__", (), {"config": config})
 
         self.config = config
-        self.client = AsyncOpenAI(
-            api_key=config.llm_api_key, base_url=config.llm_base_url
-        )
+        # Если задан SOCKS5-прокси, создаем httpx.AsyncClient с прокси
+        if config.llm_socks5_proxy:
+            # Создаем httpx.AsyncClient с настройками прокси
+            http_client = httpx.AsyncClient(
+                proxy=config.llm_socks5_proxy
+            )
+            logger.info(f"Используется SOCKS5-прокси для LLM API: {config.llm_socks5_proxy}")
+            # Инициализируем AsyncOpenAI с кастомным httpx клиентом
+            self.client = AsyncOpenAI(
+                api_key=config.llm_api_key,
+                base_url=config.llm_base_url,
+                http_client=http_client
+            )
+        else:
+            # Инициализируем AsyncOpenAI без прокси (как раньше)
+            self.client = AsyncOpenAI(
+                api_key=config.llm_api_key, base_url=config.llm_base_url
+            )
+            logger.info("Прокси для LLM API не используется")
         self.prompt_template = self._load_prompt_template()
         # Для rate limiting
         self.requests_times: list[float] = []

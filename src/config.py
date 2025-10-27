@@ -49,6 +49,9 @@ class Config:
     # Настройки логирования
     log_level: str
     log_file: str
+    
+    # Опциональные настройки LLM API
+    llm_socks5_proxy: Optional[str] = None
 
 
 class ConfigManager:
@@ -111,6 +114,7 @@ class ConfigManager:
                 prompt_file=os.getenv("PROMPT_FILE", "./prompts/summarize_prompt.txt"),
                 log_level=os.getenv("LOG_LEVEL", "INFO"),
                 log_file=os.getenv("LOG_FILE", "./bookmarks_export.log"),
+                llm_socks5_proxy=os.getenv("LLM_SOCKS5_PROXY"),
             )
 
             logger.debug("Конфигурация успешно загружена из переменных окружения")

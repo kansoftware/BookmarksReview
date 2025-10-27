@@ -1,191 +1,221 @@
 """
-Тесты для новой функциональности --check-error
+Тесты для проверки функциональности --check-error с обработкой URL с полем error в processed_urls
 """
-import argparse
 import json
-import tempfile
 from pathlib import Path
+from datetime import datetime
 from unittest.mock import Mock, patch, MagicMock
 
 import pytest
 
-from src.main import main
-from src.progress import ProgressManager
+from src.progress import ProgressManager, ProcessedBookmark, FailedBookmark, CurrentPosition
 from src.models import Bookmark
 
 
 class TestCheckErrorFunctionality:
-    """Тесты для новой функциональности --check-error"""
+    """Тесты для расширенной функциональности --check-error"""
 
-    def test_check_error_argument_added(self):
-        """Тест: аргумент --check-error добавлен в парсер командной строки"""
-        import sys
-        from io import StringIO
-        from contextlib import redirect_stderr
+    def test_get_failed_urls_with_error_from_processed(self, tmp_path):
+        """Тест получения всех URL с ошибками (из failed_urls и processed_urls с полем error)"""
+        progress_file = tmp_path / "progress.json"
+        progress_manager = ProgressManager(
+            output_dir=str(tmp_path),
+            bookmarks_file="test_bookmarks.json",
+            config_hash="test_hash",
+            progress_file_path=str(progress_file)
+        )
 
-        # Сохраняем оригинальные аргументы
-        original_argv = sys.argv[:]
-        
-        try:
-            # Проверяем, что аргумент --check-error добавлен
-            sys.argv = ['src/main.py', 'dummy.json', '--help']
-            
-            # Перехватываем вывод справки
-            f = StringIO()
-            with redirect_stderr(f):
-                try:
-                    # Создаем парсер и проверяем наличие аргумента
-                    from src.main import parse_arguments
-                    parser = argparse.ArgumentParser()
-                    parser.add_argument("--check-error", action="store_true", help="Перепроверить только URL с ошибками")
-                    
-                    # Если мы дошли до этой точки, аргумент успешно добавлен
-                    assert True
-                except SystemExit:
-                    # Это нормально для --help
-                    pass
-        finally:
-            sys.argv = original_argv
-
-    def test_progress_manager_move_failed_to_processed(self):
-        """Тест: метод move_failed_to_processed корректно перемещает закладки"""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            progress_file = Path(temp_dir) / "progress.json"
-            
-            # Создаем менеджер прогресса
-            progress_manager = ProgressManager(
-                output_dir=temp_dir,
-                bookmarks_file="test.json",
-                config_hash="test_hash"
-            )
-            
-            # Добавляем тестовую неудачную закладку
-            bookmark = Bookmark(
-                title="Test Bookmark",
-                url="https://example.com",
-                date_added=None
-            )
-            
-            progress_manager.add_failed_bookmark(bookmark, "Test error", ["Folder"])
-            
-            # Проверяем, что закладка добавлена в список неудачных
-            assert len(progress_manager.failed_bookmarks) == 1
-            assert progress_manager.failed_bookmarks[0].url == "https://example.com"
-            
-            # Перемещаем в обработанные
-            result = progress_manager.move_failed_to_processed(bookmark, "test.md", ["Folder"])
-            
-            # Проверяем, что закладка перемещена
-            assert result is True
-            assert len(progress_manager.failed_bookmarks) == 0
-            assert len(progress_manager.processed_bookmarks) == 1
-            assert progress_manager.processed_bookmarks[0].url == "https://example.com"
-
-    def test_progress_manager_remove_failed_bookmark(self):
-        """Тест: метод remove_failed_bookmark корректно удаляет закладки"""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            progress_manager = ProgressManager(
-                output_dir=temp_dir,
-                bookmarks_file="test.json",
-                config_hash="test_hash"
-            )
-            
-            # Добавляем тестовую неудачную закладку
-            bookmark = Bookmark(
-                title="Test Bookmark",
-                url="https://example.com",
-                date_added=None
-            )
-            
-            progress_manager.add_failed_bookmark(bookmark, "Test error", ["Folder"])
-            
-            # Проверяем, что закладка добавлена
-            assert len(progress_manager.failed_bookmarks) == 1
-            
-            # Удаляем закладку
-            result = progress_manager.remove_failed_bookmark("https://example.com")
-            
-            # Проверяем, что закладка удалена
-            assert result is True
-            assert len(progress_manager.failed_bookmarks) == 0
-
-    @patch('src.main.parse_arguments')
-    @patch('src.main.ConfigManager')
-    @patch('src.main.BookmarkParser')
-    @patch('src.main.DiagramGenerator')
-    @patch('src.main.FileSystemWriter')
-    @patch('src.main.ContentSummarizer')
-    @patch('src.main.ContentFetcher')
-    @patch('src.main.count_bookmarks')
-    @patch('src.main.asyncio.run')
-    def test_check_error_mode_processes_only_failed_urls(
-        self, 
-        mock_asyncio_run, 
-        mock_count_bookmarks, 
-        mock_content_fetcher, 
-        mock_content_summarizer, 
-        mock_filesystem_writer, 
-        mock_diagram_generator, 
-        mock_bookmark_parser, 
-        mock_config_manager, 
-        mock_parse_arguments
-    ):
-        """Тест: режим --check-error обрабатывает только URL с ошибками"""
-        # Настройка моков
-        mock_args = argparse.Namespace(
-            bookmarks_file="test.json",
-            config_path=None,
-            output_dir=None,
-            max_concurrent=None,
-            resume=False,
-            check_error=True,  # Включаем режим проверки ошибок
-            dry_run=False,
-            verbose=False,
-            no_diagram=False
+        # Добавляем закладки в processed с ошибками и без
+        processed_with_error = ProcessedBookmark(
+            url="http://example-with-error.com",
+            title="Example with error",
+            processed_at=datetime.now().isoformat(),
+            error="Some error occurred",
+            folder_path=["test"]
         )
         
-        mock_parse_arguments.return_value = mock_args
+        processed_success = ProcessedBookmark(
+            url="http://example-success.com",
+            title="Example success",
+            processed_at=datetime.now().isoformat(),
+            file_path="test.md",
+            folder_path=["test"]
+        )
         
-        mock_config = Mock()
-        mock_config_manager.return_value.get.return_value = mock_config
+        failed_bookmark = FailedBookmark(
+            url="http://failed-example.com",
+            title="Failed example",
+            failed_at=datetime.now().isoformat(),
+            error="Failed to load",
+            folder_path=["test"]
+        )
+
+        progress_manager.processed_bookmarks = [processed_with_error, processed_success]
+        progress_manager.failed_bookmarks = [failed_bookmark]
+
+        # Проверяем, что get_failed_urls без параметра возвращает только из failed_bookmarks
+        failed_only = progress_manager.get_failed_urls()
+        assert failed_only == {"http://failed-example.com"}
+
+        # Проверяем, что get_failed_urls с параметром возвращает из обоих списков
+        all_errors = progress_manager.get_failed_urls(include_error_from_processed=True)
+        assert all_errors == {"http://failed-example.com", "http://example-with-error.com"}
+
+    def test_move_failed_to_processed_moves_from_processed_with_error(self, tmp_path):
+        """Тест перемещения закладки из processed с ошибкой в processed без ошибки"""
+        progress_file = tmp_path / "progress.json"
+        progress_manager = ProgressManager(
+            output_dir=str(tmp_path),
+            bookmarks_file="test_bookmarks.json",
+            config_hash="test_hash",
+            progress_file_path=str(progress_file)
+        )
+
+        # Добавляем закладку в processed с ошибкой
+        bookmark_with_error = ProcessedBookmark(
+            url="http://example.com",
+            title="Example with error",
+            processed_at=datetime.now().isoformat(),
+            error="Some error occurred",
+            folder_path=["test"]
+        )
+        progress_manager.processed_bookmarks = [bookmark_with_error]
+
+        bookmark = Bookmark(url="http://example.com", title="Example with error", date_added=datetime.now())
+
+        # Перемещаем из processed с ошибкой в processed без ошибки
+        result = progress_manager.move_failed_to_processed(
+            bookmark=bookmark,
+            file_path="example.md",
+            folder_path=["test"]
+        )
+
+        assert result is True
+
+        # Проверяем, что закладка теперь в списке processed без ошибки
+        processed_urls = progress_manager.get_processed_urls()
+        assert "http://example.com" in processed_urls
+
+        # Находим обновленную закладку и проверяем, что у нее нет ошибки
+        updated_bookmark = None
+        for item in progress_manager.processed_bookmarks:
+            if item.url == "http://example.com":
+                updated_bookmark = item
+                break
+
+        assert updated_bookmark is not None
+        assert updated_bookmark.error is None
+        assert updated_bookmark.file_path == "example.md"
+
+    def test_get_processed_urls_exclude_with_error(self, tmp_path):
+        """Тест получения обработанных URL с исключением тех, у кого есть ошибка"""
+        progress_file = tmp_path / "progress.json"
+        progress_manager = ProgressManager(
+            output_dir=str(tmp_path),
+            bookmarks_file="test_bookmarks.json",
+            config_hash="test_hash",
+            progress_file_path=str(progress_file)
+        )
+
+        # Добавляем закладки с ошибками и без
+        processed_with_error = ProcessedBookmark(
+            url="http://with-error.com",
+            title="With error",
+            processed_at=datetime.now().isoformat(),
+            error="Some error",
+            folder_path=["test"]
+        )
         
-        mock_folder = Mock()
-        mock_bookmark_parser.return_value.parse_bookmarks.return_value = mock_folder
-        mock_count_bookmarks.return_value = 10
+        processed_success = ProcessedBookmark(
+            url="http://success.com",
+            title="Success",
+            processed_at=datetime.now().isoformat(),
+            file_path="success.md",
+            folder_path=["test"]
+        )
+
+        progress_manager.processed_bookmarks = [processed_with_error, processed_success]
+
+        # Проверяем, что по умолчанию возвращаются только URL без ошибок
+        processed_urls = progress_manager.get_processed_urls()
+        assert processed_urls == {"http://success.com"}
+
+        # Проверяем, что с параметром возвращаются все URL
+        all_processed_urls = progress_manager.get_processed_urls(exclude_with_error=False)
+        assert all_processed_urls == {"http://with-error.com", "http://success.com"}
+
+    def test_check_error_logic_with_processed_urls_having_error(self, tmp_path):
+        """Тест логики check_error с URL из processed_urls, у которых есть поле error"""
+        progress_file = tmp_path / "progress.json"
         
-        # Мокаем результаты asyncio.run
-        mock_asyncio_run.return_value = (5, 2)  # 5 обработано, 2 с ошибками
-        
-        # Создаем тестовый файл
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump({
-                "roots": {
-                    "bookmark_bar": {
-                        "children": [
-                            {"type": "url", "name": "Test", "url": "https://example.com"}
-                        ]
-                    }
+        # Создаем JSON файл с прогрессом, содержащий processed_urls с полем error
+        progress_data = {
+            "version": "1.0",
+            "timestamp": datetime.now().isoformat(),
+            "bookmarks_file": "test_bookmarks.json",
+            "config_hash": "test_hash",
+            "processed_urls": [
+                {
+                    "url": "http://processed-with-error.com",
+                    "title": "Processed with error",
+                    "processed_at": datetime.now().isoformat(),
+                    "file_path": "test.md",
+                    "folder_path": ["test"],
+                    "error": "Some processing error"
+                },
+                {
+                    "url": "http://processed-success.com",
+                    "title": "Processed success",
+                    "processed_at": datetime.now().isoformat(),
+                    "file_path": "test2.md",
+                    "folder_path": ["test"]
                 }
-            }, f)
-            test_file = f.name
-        
-        try:
-            # Вызываем main с правильным файлом
-            import sys
-            original_argv = sys.argv[:]
-            try:
-                sys.argv = ['src/main.py', test_file]
-                
-                # Вызываем main
-                with patch('sys.exit'):  # Заглушаем sys.exit, чтобы тест не завершился
-                    main()
-                
-                # Проверяем, что аргументы были разобраны
-                mock_parse_arguments.assert_called_once()
-            finally:
-                # Восстанавливаем оригинальные аргументы
-                sys.argv = original_argv
-            
-        finally:
-            # Удаляем временный файл
-            Path(test_file).unlink()
+            ],
+            "failed_urls": [
+                {
+                    "url": "http://failed.com",
+                    "title": "Failed",
+                    "failed_at": datetime.now().isoformat(),
+                    "error": "Failed to load",
+                    "folder_path": ["test"]
+                }
+            ],
+            "current_position": {
+                "folder_path": ["test"],
+                "bookmark_index": 0,
+                "total_in_folder": 1
+            },
+            "statistics": {
+                "total_bookmarks": 3,
+                "processed_count": 2,
+                "failed_count": 1,
+                "skipped_count": 0,
+                "start_time": datetime.now().isoformat(),
+                "last_update": datetime.now().isoformat()
+            }
+        }
+
+        with open(progress_file, 'w', encoding='utf-8') as f:
+            json.dump(progress_data, f, indent=2, ensure_ascii=False)
+
+        progress_manager = ProgressManager(
+            output_dir=str(tmp_path),
+            bookmarks_file="test_bookmarks.json",
+            config_hash="test_hash",
+            progress_file_path=str(progress_file)
+        )
+
+        # Загружаем прогресс
+        progress_manager.load_progress()
+
+        # Проверяем, что get_failed_urls без параметра возвращает только failed_urls
+        failed_only = progress_manager.get_failed_urls()
+        assert failed_only == {"http://failed.com"}
+
+        # Проверяем, что get_failed_urls с параметром возвращает все ошибки
+        all_errors = progress_manager.get_failed_urls(include_error_from_processed=True)
+        assert all_errors == {"http://failed.com", "http://processed-with-error.com"}
+
+        # Проверяем, что get_processed_urls возвращает только успешно обработанные
+        processed_only = progress_manager.get_processed_urls()
+        assert processed_only == {"http://processed-success.com"}
