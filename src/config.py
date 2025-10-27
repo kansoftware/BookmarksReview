@@ -36,6 +36,7 @@ class Config:
     fetch_max_size_mb: int
     fetch_retry_attempts: int
     fetch_retry_delay: float
+    fetch_max_redirects: int
 
     # Настройки вывода
     output_dir: str
@@ -97,6 +98,7 @@ class ConfigManager:
                 fetch_max_size_mb=int(os.getenv("FETCH_MAX_SIZE_MB", "5")),
                 fetch_retry_attempts=int(os.getenv("FETCH_RETRY_ATTEMPTS", "3")),
                 fetch_retry_delay=float(os.getenv("FETCH_RETRY_DELAY", "1.5")),
+                fetch_max_redirects=int(os.getenv("FETCH_MAX_REDIRECTS", "5")),
                 output_dir=os.getenv("OUTPUT_DIR", "./bookmarks_export"),
                 markdown_include_metadata=os.getenv(
                     "MARKDOWN_INCLUDE_METADATA", "true"
@@ -153,6 +155,11 @@ class ConfigManager:
 
         if self.config.fetch_max_concurrent <= 0:
             error_msg = f"FETCH_MAX_CONCURRENT должен быть положительным числом: {self.config.fetch_max_concurrent}"
+            validation_errors.append(error_msg)
+            logger.error(error_msg)
+
+        if self.config.fetch_max_redirects < 0:
+            error_msg = f"FETCH_MAX_REDIRECTS должен быть неотрицательным числом: {self.config.fetch_max_redirects}"
             validation_errors.append(error_msg)
             logger.error(error_msg)
 

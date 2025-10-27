@@ -7,7 +7,7 @@
 - Конфигурация: [`src/config.py`](src/config.py) — загрузка и валидация параметров из .env, настройка логирования.
 - Модели данных: [`src/models.py`](src/models.py) — dataclass-модели Bookmark, BookmarkFolder, ProcessedPage.
 - Парсер закладок: [`src/parser.py`](src/parser.py) — парсинг JSON Chrome, построение дерева папок/закладок.
-- Загрузчик контента: [`src/fetcher.py`](src/fetcher.py) — асинхронная загрузка HTML (httpx), очистка и извлечение текста (BeautifulSoup), retry/timeout/лимит размера.
+- Загрузчик контента: [`src/fetcher.py`](src/fetcher.py) — асинхронная загрузка HTML (httpx), очистка и извлечение текста (BeautifulSoup), retry/timeout/лимит размера, обработка HTTP-редиректов.
 - Генератор описаний: [`src/summarizer.py`](src/summarizer.py) — AsyncOpenAI/OpenRouter, шаблон промпта, rate limiting для LLM.
 - Генератор диаграмм: [`src/diagram.py`](src/diagram.py) — Mermaid-представление структуры закладок.
 - Запись Markdown: [`src/writer.py`](src/writer.py) — создание директорий, метаданные (YAML), генерация и запись файлов.
@@ -98,10 +98,10 @@
 - ✅ Обновление .env.example в соответствии с ТЗ
   - Файл [.env.example](.env.example) полностью обновлен в соответствии с техническим заданием
   - Добавлены все необходимые параметры: LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_MAX_TOKENS, LLM_TEMPERATURE, LLM_RATE_LIMIT
-  - Добавлены параметры загрузки контента: FETCH_TIMEOUT, FETCH_MAX_CONCURRENT, FETCH_MAX_SIZE_MB, FETCH_RETRY_ATTEMPTS, FETCH_RETRY_DELAY
-  - Добавлены параметры вывода: OUTPUT_DIR, MARKDOWN_INCLUDE_METADATA, GENERATE_MERMAID_DIAGRAM
+ - Добавлены параметры загрузки контента: FETCH_TIMEOUT, FETCH_MAX_CONCURRENT, FETCH_MAX_SIZE_MB, FETCH_RETRY_ATTEMPTS, FETCH_RETRY_DELAY, FETCH_MAX_REDIRECTS
+ - Добавлены параметры вывода: OUTPUT_DIR, MARKDOWN_INCLUDE_METADATA, GENERATE_MERMAID_DIAGRAM
   - Добавлены параметры логирования: LOG_LEVEL, LOG_FILE
-  - Добавлены примеры конфигурации для разных провайдеров (OpenRouter, OpenAI, Anthropic)
+ - Добавлены примеры конфигурации для разных провайдеров (OpenRouter, OpenAI, Anthropic)
 - ✅ Обновление документации в README.md
   - Расширен раздел "Настройка" с подробным описанием всех параметров
   - Добавлены примеры конфигурации для различных LLM провайдеров
@@ -120,7 +120,7 @@
   - Добавлены unit-тесты (13 тестов) и интеграционные тесты (4 теста)
   - Все тесты проходят успешно
 - ✅ Задача 14: Ограничение параллелизма и rate limit
-  - В [`src/fetcher.py`](src/fetcher.py): Semaphore для ограничения параллельных HTTP-запросов и rate limiting
+  - В [`src/fetcher.py`](src/fetcher.py): Semaphore для ограничения параллельных HTTP-запросов, rate limiting и обработка HTTP-редиректов
   - В [`src/summarizer.py`](src/summarizer.py): Rate limiting для LLM API запросов
   - Все параметры настраиваются через .env файл
   - Добавлены тесты для проверки функциональности ([`tests/test_fetcher.py`](tests/test_fetcher.py), [`tests/test_summarizer.py`](tests/test_summarizer.py))
@@ -205,7 +205,7 @@
 Улучшение покрытия тестов
 - ✅ Улучшены тесты для модуля parser.py: добавлены 13 новых тестов, покрытие увеличено с 78% до 94%
 - ✅ Улучшены тесты для модуля summarizer.py: добавлены 11 новых тестов, покрытие увеличено с 79% до 93%
-- ✅ Исправлены проблемы с тестами в test_fetcher.py, все тесты теперь проходят успешно
+- ✅ Исправлены проблемы с тестами в test_fetcher.py, добавлены новые тесты для проверки обработки HTTP-редиректов, все тесты теперь проходят успешно
 - ✅ Исправлены ошибки в интеграционных тестах (TypeError в FileSystemWriter.create_folder_structure)
 - ✅ Все модули имеют покрытие выше 80%, что обеспечивает высокое качество кода и надежность тестирования
 

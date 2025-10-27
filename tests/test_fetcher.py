@@ -831,6 +831,189 @@ PROMPT_FILE={prompt_path}
 
 
 @pytest.mark.asyncio
+async def test_redirect_handling():
+    """Тестирует обработку HTTP-редиректов 301/302"""
+    # Создаем временные файлы: промпт и .env
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as temp_prompt:
+        temp_prompt.write("test")
+        prompt_path = temp_prompt.name
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.env') as temp_env:
+        temp_env.write(f"""
+LLM_API_KEY=test_key
+LLM_MAX_TOKENS=1000
+LLM_TEMPERATURE=0.7
+LLM_RATE_LIMIT=3
+FETCH_TIMEOUT=30
+FETCH_MAX_CONCURRENT=10
+FETCH_MAX_SIZE_MB=5
+FETCH_RETRY_ATTEMPTS=3
+FETCH_RETRY_DELAY=1.5
+FETCH_MAX_REDIRECTS=5
+PROMPT_FILE={prompt_path}
+""")
+        temp_env_path = temp_env.name
+
+    try:
+        config_manager = ConfigManager(env_path=temp_env_path)
+        config = config_manager.get()
+        
+        fetcher = ContentFetcher(config)
+        
+        # Проверяем, что параметр конфигурации установлен корректно
+        assert fetcher.config.fetch_max_redirects == 5
+        assert fetcher.max_redirects == 5
+        
+        # Мокаем ответ с редиректом 301
+        mock_response_301 = AsyncMock()
+        mock_response_301.status_code = 301
+        mock_response_301.headers = {'location': 'https://redirected.com'}
+        
+        # Мокаем ответ с редиректом 302
+        mock_response_302 = AsyncMock()
+        mock_response_302.status_code = 302
+        mock_response_302.headers = {'location': 'https://redirected.com'}
+        
+        # Мокаем успешный ответ после редиректа
+        mock_response_200 = AsyncMock()
+        mock_response_200.status_code = 200
+        mock_response_200.text = "<html><body>Redirected content</body></html>"
+        
+        async with fetcher:
+            # Тестируем редирект 301
+            with patch.object(fetcher.session, 'get', side_effect=[mock_response_301, mock_response_200]):
+                result = await fetcher._fetch_with_retry("https://original.com")
+                assert result == "<html><body>Redirected content</body></html>"
+        
+        async with fetcher:
+            # Тестируем редирект 302
+            with patch.object(fetcher.session, 'get', side_effect=[mock_response_302, mock_response_200]):
+                result = await fetcher._fetch_with_retry("https://original.com")
+                assert result == "<html><body>Redirected content</body></html>"
+        
+        print("Тест обработки HTTP-редиректов пройден успешно!")
+    finally:
+        os.unlink(temp_env_path)
+        os.unlink(prompt_path)
+
+
+@pytest.mark.asyncio
+async def test_redirect_chain():
+    """Тестирует цепочку редиректов"""
+    # Создаем временные файлы: промпт и .env
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as temp_prompt:
+        temp_prompt.write("test")
+        prompt_path = temp_prompt.name
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.env') as temp_env:
+        temp_env.write(f"""
+LLM_API_KEY=test_key
+LLM_MAX_TOKENS=1000
+LLM_TEMPERATURE=0.7
+LLM_RATE_LIMIT=3
+FETCH_TIMEOUT=30
+FETCH_MAX_CONCURRENT=10
+FETCH_MAX_SIZE_MB=5
+FETCH_RETRY_ATTEMPTS=0  # Отключаем повторные попытки для этого теста
+FETCH_RETRY_DELAY=1.5
+FETCH_MAX_REDIRECTS=3
+PROMPT_FILE={prompt_path}
+""")
+        temp_env_path = temp_env.name
+
+    try:
+        config_manager = ConfigManager(env_path=temp_env_path)
+        config = config_manager.get()
+        
+        fetcher = ContentFetcher(config)
+        
+        # Проверяем, что параметр конфигурации установлен корректно
+        assert fetcher.config.fetch_max_redirects == 3
+        assert fetcher.max_redirects == 3
+        
+        # Мокаем цепочку редиректов
+        mock_response_302_a = AsyncMock()
+        mock_response_302_a.status_code = 302
+        mock_response_302_a.headers = {'location': 'https://redirect-b.com'}
+        
+        mock_response_302_b = AsyncMock()
+        mock_response_302_b.status_code = 302
+        mock_response_302_b.headers = {'location': 'https://redirect-c.com'}
+        
+        mock_response_200 = AsyncMock()
+        mock_response_200.status_code = 200
+        mock_response_200.text = "<html><body>Final content</body></html>"
+        
+        async with fetcher:
+            with patch.object(fetcher.session, 'get', side_effect=[mock_response_302_a, mock_response_302_b, mock_response_200]):
+                result = await fetcher._fetch_with_retry("https://original.com")
+                assert result == "<html><body>Final content</body></html>"
+        
+        print("Тест цепочки редиректов пройден успешно!")
+    finally:
+        os.unlink(temp_env_path)
+        os.unlink(prompt_path)
+
+
+@pytest.mark.asyncio
+async def test_redirect_limit_exceeded():
+    """Тестирует превышение лимита редиректов"""
+    # Создаем временные файлы: промпт и .env
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as temp_prompt:
+        temp_prompt.write("test")
+        prompt_path = temp_prompt.name
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.env') as temp_env:
+        temp_env.write(f"""
+LLM_API_KEY=test_key
+LLM_MAX_TOKENS=1000
+LLM_TEMPERATURE=0.7
+LLM_RATE_LIMIT=3
+FETCH_TIMEOUT=30
+FETCH_MAX_CONCURRENT=10
+FETCH_MAX_SIZE_MB=5
+FETCH_RETRY_ATTEMPTS=0  # Отключаем повторные попытки для этого теста
+FETCH_RETRY_DELAY=1.5
+FETCH_MAX_REDIRECTS=2
+PROMPT_FILE={prompt_path}
+""")
+        temp_env_path = temp_env.name
+
+    try:
+        config_manager = ConfigManager(env_path=temp_env_path)
+        config = config_manager.get()
+        
+        fetcher = ContentFetcher(config)
+        
+        # Проверяем, что параметр конфигурации установлен корректно
+        assert fetcher.config.fetch_max_redirects == 2
+        assert fetcher.max_redirects == 2
+        
+        # Мокаем цепочку редиректов, превышающую лимит
+        mock_response_302_a = AsyncMock()
+        mock_response_302_a.status_code = 302
+        mock_response_302_a.headers = {'location': 'https://redirect-b.com'}
+        
+        mock_response_302_b = AsyncMock()
+        mock_response_302_b.status_code = 302
+        mock_response_302_b.headers = {'location': 'https://redirect-c.com'}
+        
+        mock_response_302_c = AsyncMock()
+        mock_response_302_c.status_code = 302
+        mock_response_302_c.headers = {'location': 'https://redirect-d.com'}
+        
+        async with fetcher:
+            with patch.object(fetcher.session, 'get', side_effect=[mock_response_302_a, mock_response_302_b, mock_response_302_c]):
+                result = await fetcher._fetch_with_retry("https://original.com")
+                assert result is None  # Должно вернуть None при превышении лимита редиректов
+        
+        print("Тест превышения лимита редиректов пройден успешно!")
+    finally:
+        os.unlink(temp_env_path)
+        os.unlink(prompt_path)
+
+
+@pytest.mark.asyncio
 async def test_async_functions():
     """Запускает асинхронные тесты"""
     await test_rate_limiting()
@@ -843,6 +1026,9 @@ async def test_async_functions():
     await test_fetch_with_retry_not_found()
     await test_fetch_with_retry_content_too_large()
     await test_rate_limiting_disabled()
+    await test_redirect_handling()
+    await test_redirect_chain()
+    await test_redirect_limit_exceeded()
 
 
 if __name__ == "__main__":

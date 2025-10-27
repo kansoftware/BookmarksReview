@@ -46,6 +46,7 @@ class ContentFetcher:
             timeout=config.fetch_timeout, connect=config.fetch_timeout
         )
         self.semaphore = asyncio.Semaphore(config.fetch_max_concurrent)
+        self.max_redirects = config.fetch_max_redirects
         self.session: Optional[httpx.AsyncClient] = None
         # Для rate limiting - отслеживаем время запросов
         self.request_times: list[float] = []
@@ -69,6 +70,7 @@ class ContentFetcher:
             headers={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
             },
+            follow_redirects=False,  # Отключаем автоматическое следование редиректам
         )
 
         logger.debug("HTTP сессия создана для ContentFetcher")
@@ -174,10 +176,75 @@ class ContentFetcher:
                 logger.debug(
                     f"Попытка загрузки {attempt + 1}/{self.config.fetch_retry_attempts + 1}: {url}"
                 )
-                response = await self.session.get(url)
+                
+                # Выполняем запрос с ограничением количества редиректов
+                response = await self.session.get(url, follow_redirects=False)
+                
+                # Обработка HTTP-редиректов 301 и 302
+                if response.status_code in [301, 302]:
+                    redirect_url = response.headers.get('location')
+                    if redirect_url:
+                        logger.info(f"Получен редирект {response.status_code} с {url} на {redirect_url}")
+                        
+                        # Проверяем количество редиректов
+                        redirect_count = 0
+                        current_url = redirect_url
+                        
+                        while redirect_count < self.max_redirects:
+                            try:
+                                # Выполняем запрос по новому URL без следования редиректам
+                                redirect_response = await self.session.get(current_url, follow_redirects=False)
+                                
+                                if redirect_response.status_code == 200:
+                                    content = redirect_response.text
+                                    
+                                    # Проверяем размер контента
+                                    content_size_mb = len(content.encode("utf-8")) / (1024 * 1024)
+                                    if content_size_mb > self.config.fetch_max_size_mb:
+                                        logger.warning(
+                                            f"Размер контента превышает лимит: {current_url}, {content_size_mb:.2f}MB"
+                                        )
+                                        return None
 
-                # Проверяем статус ответа
-                if response.status_code == 200:
+                                    logger.debug(
+                                        f"Контент успешно загружен после редиректа: {current_url}, размер: {content_size_mb:.2f}MB"
+                                    )
+                                    return content
+                                elif redirect_response.status_code in [301, 302]:
+                                    # Следуем дальше по цепочке редиректов
+                                    new_redirect_url = redirect_response.headers.get('location')
+                                    if new_redirect_url:
+                                        redirect_count += 1
+                                        current_url = new_redirect_url
+                                        logger.info(f"Следуем по редиректу #{redirect_count}: {current_url}")
+                                    else:
+                                        logger.warning(f"Редирект {redirect_response.status_code} без указания location: {current_url}")
+                                        break
+                                elif redirect_response.status_code in [404, 410]:
+                                    logger.warning(
+                                        f"Страница не найдена ({redirect_response.status_code}) после редиректа: {current_url}"
+                                    )
+                                    return None
+                                else:
+                                    # Другие ошибки - повторяем попытку
+                                    logger.warning(f"Ошибка HTTP ({redirect_response.status_code}) после редиректа: {current_url}")
+                                    last_exception = httpx.HTTPStatusError(
+                                        f"HTTP error {redirect_response.status_code}",
+                                        request=redirect_response.request,
+                                        response=redirect_response,
+                                    )
+                                    break
+                            except Exception as e:
+                                logger.warning(f"Ошибка при следовании редиректу #{redirect_count + 1}: {current_url}, {str(e)}")
+                                last_exception = e
+                                break
+                        else:
+                            logger.warning(f"Превышено максимальное количество редиректов ({self.max_redirects}) для URL: {url}")
+                            return None
+                    else:
+                        logger.warning(f"Редирект {response.status_code} без указания location: {url}")
+                        return None
+                elif response.status_code == 200:
                     content = response.text
 
                     # Проверяем размер контента
