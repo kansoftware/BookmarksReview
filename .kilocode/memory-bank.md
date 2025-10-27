@@ -98,10 +98,10 @@
 - ✅ Обновление .env.example в соответствии с ТЗ
   - Файл [.env.example](.env.example) полностью обновлен в соответствии с техническим заданием
   - Добавлены все необходимые параметры: LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_MAX_TOKENS, LLM_TEMPERATURE, LLM_RATE_LIMIT
- - Добавлены параметры загрузки контента: FETCH_TIMEOUT, FETCH_MAX_CONCURRENT, FETCH_MAX_SIZE_MB, FETCH_RETRY_ATTEMPTS, FETCH_RETRY_DELAY, FETCH_MAX_REDIRECTS
- - Добавлены параметры вывода: OUTPUT_DIR, MARKDOWN_INCLUDE_METADATA, GENERATE_MERMAID_DIAGRAM
+  - Добавлены параметры загрузки контента: FETCH_TIMEOUT, FETCH_MAX_CONCURRENT, FETCH_MAX_SIZE_MB, FETCH_RETRY_ATTEMPTS, FETCH_RETRY_DELAY, FETCH_MAX_REDIRECTS
+  - Добавлены параметры вывода: OUTPUT_DIR, MARKDOWN_INCLUDE_METADATA, GENERATE_MERMAID_DIAGRAM
   - Добавлены параметры логирования: LOG_LEVEL, LOG_FILE
- - Добавлены примеры конфигурации для разных провайдеров (OpenRouter, OpenAI, Anthropic)
+  - Добавлены примеры конфигурации для разных провайдеров (OpenRouter, OpenAI, Anthropic)
 - ✅ Обновление документации в README.md
   - Расширен раздел "Настройка" с подробным описанием всех параметров
   - Добавлены примеры конфигурации для различных LLM провайдеров
@@ -152,7 +152,6 @@
   - Реализованы мок-серверы для HTTP-запросов и LLM API с использованием pytest-mock
   - Все E2E тесты проходят успешно в течение <2 секунд
   - Тесты покрывают полный workflow: парсинг JSON → загрузка контента → генерация описаний → создание файловой структуры → Mermaid-диаграммы
-
 - ✅ Задача 19: Статический анализ и типизация
   - Настроены инструменты статического анализа в [`pyproject.toml`](pyproject.toml):
     - **mypy**: Строгая типизация (strict mode) с полным покрытием
@@ -164,7 +163,7 @@
   - Заменены устаревшие типы (List, Dict, Tuple) на встроенные (list, dict, tuple)
 
 - ✅ Задача 20: Документация
-  - Обновлен [`README.md`](README.md) с подробным разделом о статическом анализе и инструментах качества кода
+ - Обновлен [`README.md`](README.md) с подробным разделом о статическом анализе инструментах качества кода
   - Добавлены примеры запуска инструментов качества кода
   - Обновлены метаданные проекта в [`pyproject.toml`](pyproject.toml) и [`setup.py`](setup.py)
   - Версия проекта: 1.0.0 (Production/Stable)
@@ -173,9 +172,17 @@
 - ✅ Финальное тестирование и релиз
   - Все тесты проходят: 222 passed, 2 skipped
   - Покрытие кода: **91.39%** (превышает цель 80%+)
-  - Исправлены ошибки в интеграционных тестах (TypeError в FileSystemWriter)
-  - Проект готов к релизу с CLI-интерфейсом `bookmark_summarizer`
+ - Исправлены ошибки в интеграционных тестах (TypeError в FileSystemWriter)
+ - Проект готов к релизу с CLI-интерфейсом `bookmark_summarizer`
   - Поддержка установки через pip: `pip install bookmark_summarizer`
+
+- ✅ Задача 21: Новая функциональность --check-error
+  - Добавлен аргумент командной строки `--check-error` для перепроверки только URL с ошибками из предыдущего сеанса
+  - Добавлен аргумент командной строки `--progress-file` для указания пути к файлу прогресса
+  - Реализована логика перепроверки только неудачных URL из файла прогресса
+  - При успешной перепроверке URL перемещаются из списка неудачных в список обработанных
+  - Обновлены тесты для новой функциональности в `tests/test_check_error_functionality.py`
+  - Обновлена документация в README.md
 
 Тестовое покрытие
 - Общее покрытие тестов: **91.39%** (цель 80%+ достигнута и значительно превышена)
@@ -191,6 +198,7 @@
   - [`tests/test_main.py`](tests/test_main.py) — тесты основного модуля (84% покрытие)
   - [`tests/test_logger.py`](tests/test_logger.py) — тесты системы логирования (94% покрытие)
   - [`tests/test_progress.py`](tests/test_progress.py) — тесты менеджера прогресса (90% покрытие)
+  - [`tests/test_check_error_functionality.py`](tests/test_check_error_functionality.py) — тесты новой функциональности --check-error (100% покрытие)
 - Интеграционные тесты:
   - [`tests/test_integration.py`](tests/test_integration.py) — тесты основного workflow (6 passed)
   - [`tests/test_error_handling_integration.py`](tests/test_error_handling_integration.py) — тесты обработки ошибок (10 passed)

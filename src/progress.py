@@ -83,7 +83,7 @@ class ProgressManager:
     периодическое сохранение прогресса и атомарные операции.
     """
 
-    def __init__(self, output_dir: str, bookmarks_file: str, config_hash: str):
+    def __init__(self, output_dir: str, bookmarks_file: str, config_hash: str, progress_file_path: Optional[str] = None):
         """
         Инициализация менеджера прогресса.
 
@@ -91,17 +91,24 @@ class ProgressManager:
             output_dir: Директория для сохранения результатов
             bookmarks_file: Путь к файлу закладок
             config_hash: Хеш конфигурации для проверки совместимости
+            progress_file_path: Путь к файлу прогресса (опционально)
         """
         log_function_call(
             "ProgressManager.__init__",
             (output_dir, bookmarks_file),
-            {"config_hash": config_hash},
+            {"config_hash": config_hash, "progress_file_path": progress_file_path},
         )
 
         self.output_dir = Path(output_dir)
         self.bookmarks_file = bookmarks_file
         self.config_hash = config_hash
-        self.progress_file = self.output_dir / "progress.json"
+        
+        # Используем указанный файл прогресса или создаем стандартный путь
+        if progress_file_path:
+            self.progress_file = Path(progress_file_path)
+        else:
+            self.progress_file = self.output_dir / "progress.json"
+        
         self.lock_file = self.output_dir / "progress.lock"
 
         # Данные прогресса
@@ -485,6 +492,82 @@ class ProgressManager:
                 },
             )
             return False
+
+    def remove_failed_bookmark(self, url: str) -> bool:
+        """
+        Удаляет закладку из списка неудачных.
+
+        Аргументы:
+            url: URL закладки для удаления
+
+        Возвращает:
+            bool: True если закладка была удалена, иначе False
+        """
+        log_function_call("ProgressManager.remove_failed_bookmark", (url,))
+
+        with self._lock:
+            original_count = len(self.failed_bookmarks)
+            self.failed_bookmarks = [item for item in self.failed_bookmarks if item.url != url]
+            removed = len(self.failed_bookmarks) != original_count
+
+            if removed:
+                logger.debug(f"Закладка удалена из списка неудачных: {url}")
+                # Сохраняем прогресс
+                self.save_progress()
+            else:
+                logger.debug(f"Закладка не найдена в списке неудачных: {url}")
+
+            return removed
+
+    def move_failed_to_processed(self, bookmark: Bookmark, file_path: str, folder_path: list[str]) -> bool:
+        """
+        Перемещает закладку из списка неудачных в список обработанных.
+
+        Аргументы:
+            bookmark: Закладка для перемещения
+            file_path: Путь к сохраненному файлу
+            folder_path: Путь в иерархии папок
+
+        Возвращает:
+            bool: True если закладка была перемещена, иначе False
+        """
+        log_function_call("ProgressManager.move_failed_to_processed", (bookmark.title,))
+
+        with self._lock:
+            # Удаляем из списка неудачных
+            original_failed_count = len(self.failed_bookmarks)
+            self.failed_bookmarks = [item for item in self.failed_bookmarks if item.url != bookmark.url]
+            removed = len(self.failed_bookmarks) != original_failed_count
+
+            if removed:
+                # Добавляем в список обработанных
+                processed = ProcessedBookmark(
+                    url=bookmark.url,
+                    title=bookmark.title,
+                    processed_at=datetime.now().isoformat(),
+                    file_path=file_path,
+                    folder_path=folder_path,
+                )
+                self.processed_bookmarks.append(processed)
+
+                logger.info(f"Закладка перемещена из неудачных в обработанные: {bookmark.title}")
+                
+                # Сохраняем прогресс
+                self.save_progress()
+                return True
+            else:
+                logger.warning(f"Закладка не найдена в списке неудачных: {bookmark.title}")
+                # Добавляем в список обработанных в любом случае, если не найдена в неудачных
+                processed = ProcessedBookmark(
+                    url=bookmark.url,
+                    title=bookmark.title,
+                    processed_at=datetime.now().isoformat(),
+                    file_path=file_path,
+                    folder_path=folder_path,
+                )
+                self.processed_bookmarks.append(processed)
+                self.save_progress()
+                return False
 
 
 def calculate_config_hash(config: Any) -> str:

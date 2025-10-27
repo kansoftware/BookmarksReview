@@ -73,6 +73,18 @@ def parse_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--check-error", action="store_true", help="Перепроверить только URL с ошибками"
+    )
+
+    # Добавляем опциональный аргумент для указания файла прогресса при использовании --check-error
+    parser.add_argument(
+        "--progress-file",
+        dest="progress_file",
+        help="Путь к файлу прогресса (по умолчанию: bookmarks_export/progress.json)",
+        default=None
+    )
+
+    parser.add_argument(
         "--dry-run", action="store_true", help="Только парсинг, без обработки контента"
     )
 
@@ -145,14 +157,17 @@ def create_progress_manager(
     config_hash = calculate_config_hash(config)
 
     # Создаем менеджер прогресса
+    # Если указан файл прогресса в аргументах, используем его
+    progress_file_path = args.progress_file or None
     progress_manager = ProgressManager(
         output_dir=config.output_dir,
         bookmarks_file=bookmarks_file,
         config_hash=config_hash,
+        progress_file_path=progress_file_path
     )
 
     # Загружаем прогресс если нужно
-    if args.resume:
+    if args.resume or args.check_error:
         if progress_manager.load_progress():
             logger.info("Прогресс успешно загружен для возобновления")
         else:
@@ -169,6 +184,7 @@ async def process_single_bookmark(
     summarizer: ContentSummarizer,
     progress_manager: ProgressManager,
     folder_path: list[str],
+    args: argparse.Namespace,
 ) -> Optional[ProcessedPage]:
     """
     Обрабатывает одну закладку.
@@ -192,13 +208,13 @@ async def process_single_bookmark(
     processed_urls = progress_manager.get_processed_urls()
     failed_urls = progress_manager.get_failed_urls()
 
-    # Пропускаем уже обработанные URL
-    if bookmark.url in processed_urls:
+    # Пропускаем уже обработанные URL (кроме режима check_error)
+    if bookmark.url in processed_urls and not args.check_error:
         logger.debug(f"Пропуск уже обработанного URL: {bookmark.url}")
         return None
 
-    # Пропускаем URL с предыдущими ошибками
-    if bookmark.url in failed_urls:
+    # Пропускаем URL с предыдущими ошибками (кроме режима check_error)
+    if bookmark.url in failed_urls and not args.check_error:
         logger.debug(f"Пропуск URL с предыдущей ошибкой: {bookmark.url}")
         return None
 
@@ -272,6 +288,8 @@ async def traverse_and_process_folder(
     progress_tracker: ProgressTracker,
     dry_run: bool = False,
     resume_position: Optional[tuple[list[str], int]] = None,
+    check_error: bool = False,
+    args: Optional[argparse.Namespace] = None,
 ) -> tuple[int, int]:
     """
     Рекурсивно обходит папку и обрабатывает закладки.
@@ -325,9 +343,28 @@ async def traverse_and_process_folder(
 
     # Обрабатываем закладки в текущей папке
     for i, bookmark in enumerate(folder.bookmarks):
-        # Пропускаем обработанные закладки при возобновлении
-        if i < start_index:
-            continue
+        # В режиме check_error обрабатываем только ошибочные URL
+        if check_error:
+            failed_urls = progress_manager.get_failed_urls()
+            if bookmark.url not in failed_urls:
+                continue
+        else:
+            # Пропускаем обработанные закладки при возобновлении
+            if i < start_index:
+                continue
+
+            # Проверяем, не обработана ли уже эта закладка
+            processed_urls = progress_manager.get_processed_urls()
+            failed_urls = progress_manager.get_failed_urls()
+
+            if bookmark.url in processed_urls:
+                logger.debug(f"Пропуск уже обработанного URL: {bookmark.url}")
+                continue
+
+            if bookmark.url in failed_urls:
+                logger.debug(f"Пропуск URL с предыдущей ошибкой: {bookmark.url}")
+                failed_count += 1
+                continue
 
         progress_tracker.update(0, bookmark.title)
 
@@ -335,19 +372,6 @@ async def traverse_and_process_folder(
         progress_manager.update_current_position(
             current_folder_path, i, len(folder.bookmarks)
         )
-
-        # Проверяем, не обработана ли уже эта закладка
-        processed_urls = progress_manager.get_processed_urls()
-        failed_urls = progress_manager.get_failed_urls()
-
-        if bookmark.url in processed_urls:
-            logger.debug(f"Пропуск уже обработанного URL: {bookmark.url}")
-            continue
-
-        if bookmark.url in failed_urls:
-            logger.debug(f"Пропуск URL с предыдущей ошибкой: {bookmark.url}")
-            failed_count += 1
-            continue
 
         if dry_run:
             # В режиме dry-run только логируем закладки
@@ -363,9 +387,11 @@ async def traverse_and_process_folder(
             continue
 
         # Обрабатываем закладку
-        page = await process_single_bookmark(
-            bookmark, fetcher, summarizer, progress_manager, current_folder_path
-        )
+        page = None
+        if args is not None:
+            page = await process_single_bookmark(
+                bookmark, fetcher, summarizer, progress_manager, current_folder_path, args
+            )
 
         if page:
             # Определяем путь для сохранения файла
@@ -376,13 +402,21 @@ async def traverse_and_process_folder(
             # Сохраняем файл
             writer.write_markdown(page, file_path)
 
-            # Добавляем в прогресс
-            progress_manager.add_processed_bookmark(
-                bookmark, str(file_path), current_folder_path
-            )
+            # В режиме check_error перемещаем URL из failed в processed
+            if check_error:
+                # Перемещаем из списка неудачных в список обработанных
+                progress_manager.move_failed_to_processed(bookmark, str(file_path), current_folder_path)
+            else:
+                # Добавляем в прогресс
+                progress_manager.add_processed_bookmark(
+                    bookmark, str(file_path), current_folder_path
+                )
             processed_count += 1
         else:
-            failed_count += 1
+            # В режиме check_error не увеличиваем failed_count, так как
+            # мы только перепроверяем уже отмеченные как failed
+            if not check_error:
+                failed_count += 1
 
         progress_tracker.update(1)
 
@@ -399,6 +433,7 @@ async def traverse_and_process_folder(
             progress_tracker,
             dry_run,
             resume_position,
+            check_error,
         )
         processed_count += child_processed
         failed_count += child_failed
@@ -492,6 +527,7 @@ async def process_bookmarks(
             progress_tracker,
             args.dry_run,
             resume_position,
+            args.check_error,
         )
 
     # Обновляем статистику и принудительно сохраняем прогресс
@@ -572,6 +608,9 @@ def main() -> None:
         logger.info(f"Файл закладок: {bookmarks_file}")
         logger.info(f"Директория вывода: {config.output_dir}")
         logger.info(f"Режим возобновления: {args.resume}")
+        logger.info(f"Режим проверки ошибок: {args.check_error}")
+        if args.progress_file:
+            logger.info(f"Файл прогресса: {args.progress_file}")
         logger.info(f"Режим dry-run: {args.dry_run}")
         logger.info(f"Генерация диаграммы: {not args.no_diagram}")
 
