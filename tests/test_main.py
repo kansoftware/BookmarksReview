@@ -40,6 +40,7 @@ class TestMainModule(unittest.TestCase):
             fetch_max_size_mb=5,
             fetch_retry_attempts=3,
             fetch_retry_delay=1.5,
+            fetch_max_redirects=5,
             output_dir=str(self.temp_path / "output"),
             markdown_include_metadata=True,
             generate_mermaid_diagram=True,
@@ -149,9 +150,13 @@ class TestMainModule(unittest.TestCase):
         mock_progress_manager.add_processed_bookmark = MagicMock()
         mock_progress_manager.add_failed_bookmark = MagicMock()
         
+        # Создаем mock аргументов
+        mock_args = MagicMock()
+        mock_args.check_error = False
+        
         # Вызываем функцию
         result = await process_single_bookmark(
-            self.test_bookmark, mock_fetcher, mock_summarizer, mock_progress_manager, ["Test Folder"]
+            self.test_bookmark, mock_fetcher, mock_summarizer, mock_progress_manager, ["Test Folder"], mock_args
         )
         
         # Проверяем результат
@@ -208,6 +213,7 @@ class TestMainModule(unittest.TestCase):
         mock_args.resume = False
         mock_args.dry_run = False
         mock_args.no_diagram = False
+        mock_args.check_error = False  # Добавляем это для правильной работы функции
         
         mock_fetcher = AsyncMock()
         mock_fetcher_class.return_value.__aenter__.return_value = mock_fetcher
@@ -229,10 +235,14 @@ class TestMainModule(unittest.TestCase):
         mock_progress_manager = MagicMock()
         mock_create_progress_manager.return_value = mock_progress_manager
         mock_progress_manager.load_progress.return_value = False
+        mock_progress_manager.get_processed_urls.return_value = set()  # Добавляем это
+        mock_progress_manager.get_failed_urls.return_value = set()     # Добавляем это
         mock_progress_manager.initialize_statistics = MagicMock()
         mock_progress_manager.get_resume_position.return_value = None
         mock_progress_manager.update_statistics = MagicMock()
         mock_progress_manager.force_save = MagicMock()
+        mock_progress_manager.add_processed_bookmark = MagicMock() # Добавляем это
+        mock_progress_manager.add_failed_bookmark = MagicMock()     # Добавляем это
         
         # Вызываем функцию через asyncio.run
         processed, failed = asyncio.run(process_bookmarks(mock_args, self.test_config, self.test_folder, "test_bookmarks.json"))
@@ -334,9 +344,13 @@ class TestMainModuleAsync(unittest.IsolatedAsyncioTestCase):
         mock_progress_manager.add_processed_bookmark = MagicMock()
         mock_progress_manager.add_failed_bookmark = MagicMock()
         
+        # Создаем mock аргументов
+        mock_args = MagicMock()
+        mock_args.check_error = False
+        
         # Вызываем функцию
         result = await process_single_bookmark(
-            self.test_bookmark, mock_fetcher, mock_summarizer, mock_progress_manager, ["Test Folder"]
+            self.test_bookmark, mock_fetcher, mock_summarizer, mock_progress_manager, ["Test Folder"], mock_args
         )
         
         # Проверяем результат
@@ -374,9 +388,13 @@ class TestMainModuleAsync(unittest.IsolatedAsyncioTestCase):
         mock_progress_manager.add_processed_bookmark = MagicMock()
         mock_progress_manager.add_failed_bookmark = MagicMock()
         
+        # Создаем mock аргументов
+        mock_args = MagicMock()
+        mock_args.check_error = False
+        
         # Вызываем функцию
         result = await process_single_bookmark(
-            self.test_bookmark, mock_fetcher, mock_summarizer, mock_progress_manager, ["Test Folder"]
+            self.test_bookmark, mock_fetcher, mock_summarizer, mock_progress_manager, ["Test Folder"], mock_args
         )
         
         # Проверяем результат
@@ -399,9 +417,13 @@ class TestMainModuleAsync(unittest.IsolatedAsyncioTestCase):
         mock_progress_manager.add_processed_bookmark = MagicMock()
         mock_progress_manager.add_failed_bookmark = MagicMock()
         
+        # Создаем mock аргументов
+        mock_args = MagicMock()
+        mock_args.check_error = False
+        
         # Вызываем функцию
         result = await process_single_bookmark(
-            self.test_bookmark, mock_fetcher, mock_summarizer, mock_progress_manager, ["Test Folder"]
+            self.test_bookmark, mock_fetcher, mock_summarizer, mock_progress_manager, ["Test Folder"], mock_args
         )
         
         # Проверяем результат

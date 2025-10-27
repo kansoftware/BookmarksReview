@@ -27,7 +27,7 @@ class TestLoggerManager(unittest.TestCase):
             llm_api_key="test_key",
             llm_base_url="https://api.test.com",
             llm_model="test-model",
-            llm_max_tokens=1000,
+            llm_max_tokens=100,
             llm_temperature=0.7,
             llm_rate_limit=3,
             
@@ -36,6 +36,7 @@ class TestLoggerManager(unittest.TestCase):
             fetch_max_size_mb=5,
             fetch_retry_attempts=3,
             fetch_retry_delay=1.5,
+            fetch_max_redirects=5,
             
             output_dir="./test_output",
             markdown_include_metadata=True,
@@ -142,19 +143,20 @@ class TestLoggerFunctions(unittest.TestCase):
             llm_max_tokens=1000,
             llm_temperature=0.7,
             llm_rate_limit=3,
-            
+    
             fetch_timeout=30,
             fetch_max_concurrent=10,
             fetch_max_size_mb=5,
             fetch_retry_attempts=3,
             fetch_retry_delay=1.5,
-            
+            fetch_max_redirects=5,
+    
             output_dir="./test_output",
             markdown_include_metadata=True,
             generate_mermaid_diagram=True,
-            
+    
             prompt_file="./test_prompt.txt",
-            
+    
             log_level="INFO",
             log_file=self.log_file
         )
@@ -287,19 +289,20 @@ class TestLoggerIntegration(unittest.TestCase):
                     llm_max_tokens=1000,
                     llm_temperature=0.7,
                     llm_rate_limit=3,
-                    
+    
                     fetch_timeout=30,
                     fetch_max_concurrent=10,
                     fetch_max_size_mb=5,
                     fetch_retry_attempts=3,
                     fetch_retry_delay=1.5,
-                    
+                    fetch_max_redirects=5,
+    
                     output_dir="./test_output",
                     markdown_include_metadata=True,
                     generate_mermaid_diagram=True,
-                    
+    
                     prompt_file="./test_prompt.txt",
-                    
+    
                     log_level=level,
                     log_file=self.log_file
                 )

@@ -37,6 +37,7 @@ def test_config(temp_dir):
         fetch_max_size_mb=5,
         fetch_retry_attempts=3,
         fetch_retry_delay=1.5,
+        fetch_max_redirects=5,
         output_dir=str(temp_dir),
         markdown_include_metadata=True,
         generate_mermaid_diagram=True,
