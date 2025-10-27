@@ -28,8 +28,7 @@ class FileSystemWriter:
     """
     Класс для записи файловой структуры и Markdown-файлов.
 
-    Отвечает за создание директорий согласно иерархии закладок
-    и сохранение обработанных страниц в формате Markdown.
+    Отвечает за создание директорий согласно иерархии закладок и сохранение обработанных страниц в формате Markdown.
     """
 
     def __init__(self, config: Config):
@@ -84,36 +83,6 @@ class FileSystemWriter:
         logger.info(f"Структура папок создана для: {folder.name}")
 
         return base_path
-        """
-        Создает структуру папок согласно иерархии закладок.
-
-        Аргументы:
-            folder: Корневая папка закладок
-            base_path: Базовый путь для создания структуры (по умолчанию output_dir)
-
-        Возвращает:
-            Path: Путь к созданной корневой папке
-        """
-        start_time = time.time()
-        log_function_call(
-            "create_folder_structure", (folder.name,), {"base_path": base_path}
-        )
-
-        if base_path is None:
-            base_path = self.output_dir
-        elif isinstance(base_path, str):
-            base_path = Path(base_path)
-
-        # Рекурсивно создаем структуру папок
-        self._create_folder_recursive(folder, base_path)
-
-        duration = time.time() - start_time
-        log_performance(
-            "create_folder_structure", duration, f"root_folder={folder.name}"
-        )
-        logger.info(f"Структура папок создана для: {folder.name}")
-
-        return base_path
 
     def _create_folder_recursive(
         self, folder: BookmarkFolder, parent_path: Path
@@ -132,7 +101,7 @@ class FileSystemWriter:
         )
 
         # Создаем текущую папку с нормализованным именем
-        folder_name = self._sanitize_filename(folder.name)
+        folder_name = self._sanitize_filename(folder.name, parent_path=parent_path, is_folder=True)
         folder_path = parent_path / folder_name
         folder_path.mkdir(parents=True, exist_ok=True)
         logger.debug(f"Создана папка: {folder_path}")
@@ -166,6 +135,7 @@ class FileSystemWriter:
             content = self._format_markdown_content(page)
 
             # Записываем файл
+            assert len(file_path.name) < 255
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(content)
 
@@ -266,36 +236,154 @@ class FileSystemWriter:
         logger.debug(f"Сгенерированы метаданные для: {page.title}")
         return result
 
-    def _sanitize_filename(self, name: str) -> str:
+    def _sanitize_filename(self, name: str, parent_path: Optional[Path] = None, max_path_len: int = 255, is_folder: bool = False) -> str:
         """
-        Нормализует имя файла, удаляя недопустимые символы.
+        Нормализует имя файла, удаляя недопустимые символы и ограничивая длину с учетом родительского пути.
+        Учитывает, что символы могут быть в UTF-8, где 1 символ != 1 байт.
+
+        Аргументы:
+            name: Исходное имя файла или папки
+            parent_path: Родительский путь для учета общей длины (опционально)
+            max_path_len: Максимальная длина всего пути в байтах (включая имя и расширение) (по умолчанию 255)
+            is_folder: Флаг, указывающий, является ли имя папкой (по умолчанию False)
+
+        Возвращает:
+            str: Нормализованное имя файла
+        """
+        log_function_call("_sanitize_filename", (name, parent_path, max_path_len))
+        logger.debug(f"Входные данные _sanitize_filename: name='{name}', parent_path='{parent_path}', max_path_len={max_path_len}, is_folder={is_folder}")
+
+        original_name = name
+
+        # Проверяем, не является ли переданный путь None или пустым
+        if not name:
+            sanitized = "unnamed"
+            logger.debug("Пустое имя файла заменено на 'unnamed'")
+            return sanitized
+
+        # Санитизация: удаление или замена недопустимых символов
+        sanitized = self._sanitize_invalid_chars(name)
+        
+        # Ограничение длины имени в зависимости от родительского пути
+        # Учитываем, что длина пути измеряется в байтах, а не в символах
+        sanitized = self._limit_name_length(sanitized, original_name, parent_path, max_path_len, is_folder)
+
+        if original_name != sanitized:
+            logger.debug(f"Имя файла санитизировано: '{original_name}' -> '{sanitized}'")
+
+        return sanitized
+
+    def _sanitize_invalid_chars(self, name: str) -> str:
+        """
+        Удаляет или заменяет недопустимые символы в имени файла.
 
         Аргументы:
             name: Исходное имя файла или папки
 
         Возвращает:
-            str: Нормализованное имя файла
+            str: Имя с удаленными недопустимыми символами
         """
-        log_function_call("_sanitize_filename", (name,))
-
-        original_name = name
-
-        # Удаляем или заменяем недопустимые символы
-        # Сохраняем кириллицу, латиницу, цифры, пробелы, дефисы и подчеркивания
-        sanitized = re.sub(r'[<>:"/\\|?*]', "", name)
-
-        # Заменяем множественные пробелы на один
-        sanitized = re.sub(r"\s+", " ", sanitized)
-
-        # Удаляем пробелы в начале и конце
+        # Заменяем недопустимые символы на подчеркивание
+        # Используем кешированный паттерн для оптимизации
+        if not hasattr(self, '_invalid_chars_pattern'):
+            self._invalid_chars_pattern = re.compile(r'[<>:"/\\|?*]')
+        sanitized = self._invalid_chars_pattern.sub("_", name)
+        
+        # Заменяем последовательности пробелов на один пробел
+        if not hasattr(self, '_whitespace_pattern'):
+            self._whitespace_pattern = re.compile(r"\s+")
+        sanitized = self._whitespace_pattern.sub(" ", sanitized)
+        
+        # Убираем пробелы в начале и конце
         sanitized = sanitized.strip()
+        logger.debug(f"После санитизации недопустимых символов: '{sanitized}'")
+        return sanitized
 
-        # Ограничиваем длину имени (максимум 255 символов для большинства файловых систем)
-        max_length = 255
-        if len(sanitized) > max_length:
-            sanitized = sanitized[:max_length].rstrip()
+    def _calculate_path_overhead(self, parent_path: Optional[Path], is_folder: bool) -> int:
+        """
+        Рассчитывает дополнительную длину пути в байтах, зависящую от типа элемента (файл или папка).
+
+        Аргументы:
+            parent_path: Родительский путь
+            is_folder: Флаг, указывающий, является ли элемент папкой
+
+        Возвращает:
+            int: Дополнительная длина пути в байтах
+        """
+        if is_folder:
+            # Для папки: только разделитель пути (если есть родительский путь)
+            return 1 if parent_path else 0
+        else:
+            # Для файла: разделитель пути + расширение .md (в UTF-8 это 3 байта)
+            return 1 + len(".md".encode('utf-8')) if parent_path else len(".md".encode('utf-8'))
+
+    def _limit_name_length(self, sanitized: str, original_name: str, parent_path: Optional[Path], max_path_len: int, is_folder: bool) -> str:
+        """
+        Ограничивает длину имени файла в зависимости от родительского пути и максимальной длины пути.
+        Учитывает, что длина пути измеряется в байтах для UTF-8 строк.
+
+        Аргументы:
+            sanitized: Санитизированное имя
+            original_name: Оригинальное имя
+            parent_path: Родительский путь
+            max_path_len: Максимальная длина всего пути в байтах
+            is_folder: Флаг, указывающий, является ли элемент папкой
+
+        Возвращает:
+            str: Имя с ограниченной длиной
+        """
+        # Проверяем, что parent_path не None перед использованием
+        current_path_str = str(parent_path) if parent_path else ""
+        # Рассчитываем длину родительского пути в байтах (для UTF-8)
+        current_path_len = len(current_path_str.encode('utf-8'))
+        
+        # Рассчитываем overhead в зависимости от типа (файл или папка)
+        # Для файлов: разделитель пути + расширение .md (3 символа, но в UTF-8 это может быть больше байт)
+        if is_folder:
+            path_overhead = 1 if current_path_len > 0 else 0  # байт для разделителя пути
+        else:
+            # Для файла: 1 байт для разделителя пути + длина ".md" в UTF-8 (обычно 3 байта)
+            path_overhead = 1 + len(".md".encode('utf-8')) if current_path_len > 0 else len(".md".encode('utf-8'))
+        
+        # Определяем максимальную длину имени в байтах
+        max_name_length_bytes = max_path_len - current_path_len - path_overhead
+        
+        logger.debug(f"current_path_len_bytes={current_path_len}, path_overhead={path_overhead}, max_name_length_bytes={max_name_length_bytes}")
+        logger.debug(f"Расчет максимальной длины имени в байтах: max_path_len={max_path_len} - current_path_len={current_path_len} - path_overhead={path_overhead} = {max_name_length_bytes}")
+
+        if max_name_length_bytes <= 0:
+            # Если даже минимальное имя не помещается, сразу используем хеш
+            return self._generate_hash_name(original_name, "item",
+                f"Имя файла заменено на хеш из-за слишком длинного родительского пути (parent_path='{parent_path}', max_path_len={max_path_len})")
+
+        # Обрезаем имя, учитывая ограничение в байтах
+        # Для этого конвертируем строку в байты, обрезаем, затем декодируем обратно
+        sanitized_bytes = sanitized.encode('utf-8')
+        if len(sanitized_bytes) > max_name_length_bytes:
+            # Обрезаем байты до максимально допустимой длины
+            truncated_bytes = sanitized_bytes[:max_name_length_bytes]
+            # Декодируем обратно в строку, обрабатывая возможные ошибки
+            # (например, обрезание посередине многобайтового символа)
+            try:
+                sanitized = truncated_bytes.decode('utf-8')
+            except UnicodeDecodeError:
+                # Если декодирование не удалось из-за обрезания символа,
+                # пробуем обрезать до последнего полного символа
+                sanitized = truncated_bytes.decode('utf-8', errors='ignore')
+                # Или пытаемся найти последний полный символ
+                while truncated_bytes and truncated_bytes[-1] & 0xC0 == 0x80:  # Проверяем, является ли последний байт продолжением символа
+                    truncated_bytes = truncated_bytes[:-1]
+                try:
+                    sanitized = truncated_bytes.decode('utf-8')
+                except UnicodeDecodeError:
+                    # Если все еще не удается декодировать, используем хеш
+                    return self._generate_hash_name(original_name, "item",
+                        f"Имя файла заменено на хеш из-за проблем с UTF-8 декодированием (parent_path='{parent_path}', max_path_len={max_path_len})")
+            
             logger.debug(
-                f"Имя файла обрезано с {len(original_name)} до {len(sanitized)} символов"
+                f"Имя файла обрезано с {len(original_name.encode('utf-8'))} до {len(sanitized.encode('utf-8'))} байт "
+                f"с учетом родительского пути '{parent_path}' и лимита {max_path_len} байт. "
+                f"Результат: '{sanitized}'"
             )
 
         # Если имя стало пустым после очистки, используем значение по умолчанию
@@ -303,12 +391,53 @@ class FileSystemWriter:
             sanitized = "unnamed"
             logger.debug("Пустое имя файла заменено на 'unnamed'")
 
-        if original_name != sanitized:
-            logger.debug(
-                f"Имя файла санитизировано: '{original_name}' -> '{sanitized}'"
-            )
+        # ФИНАЛЬНАЯ ПРОВЕРКА: убедимся, что полный путь не превышает лимит в байтах
+        if parent_path:
+            full_path_candidate = self._construct_full_path(parent_path, sanitized, is_folder)
+            full_path_candidate_bytes_len = len(str(full_path_candidate).encode('utf-8'))
+            logger.debug(f"Финальная проверка пути: '{full_path_candidate}' (длина: {full_path_candidate_bytes_len} байт)")
+            if full_path_candidate_bytes_len > max_path_len:
+                return self._generate_hash_name(original_name, "item",
+                    f"Имя файла заменено на хеш из-за превышения общего лимита пути (parent_path='{parent_path}', max_path_len={max_path_len}, full_path_candidate_bytes_len={full_path_candidate_bytes_len})")
 
         return sanitized
+
+    def _construct_full_path(self, parent_path: Path, sanitized_name: str, is_folder: bool) -> Path:
+        """
+        Конструирует полный путь для проверки длины.
+
+        Аргументы:
+            parent_path: Родительский путь
+            sanitized_name: Санитизированное имя
+            is_folder: Флаг, указывающий, является ли элемент папкой
+
+        Возвращает:
+            Path: Полный путь
+        """
+        if is_folder:
+            # Для папки: полный путь = parent_path + "/" + sanitized
+            return parent_path / sanitized_name
+        else:
+            # Для файла: полный путь = parent_path + "/" + sanitized + ".md"
+            return parent_path / f"{sanitized_name}.md"
+
+    def _generate_hash_name(self, original_name: str, prefix: str, warning_msg: str) -> str:
+        """
+        Генерирует хешированное имя файла в случае проблем с длиной пути.
+
+        Аргументы:
+            original_name: Оригинальное имя
+            prefix: Префикс для хешированного имени
+            warning_msg: Сообщение для логирования
+
+        Возвращает:
+            str: Хешированное имя файла
+        """
+        import hashlib
+        hash_name = hashlib.md5(original_name.encode()).hexdigest()[:8]
+        hashed_name = f"{prefix}_{hash_name}"
+        logger.warning(warning_msg)
+        return hashed_name
 
     def get_bookmark_file_path(
         self, bookmark: Bookmark, base_path: Optional[Path] = None
@@ -326,18 +455,22 @@ class FileSystemWriter:
         log_function_call(
             "get_bookmark_file_path", (bookmark.title,), {"base_path": base_path}
         )
+        logger.debug(f"Входные данные get_bookmark_file_path: title='{bookmark.title}', base_path='{base_path}'")
 
         if base_path is None:
             base_path = self.output_dir
 
         # Нормализуем заголовок для использования как имени файла
-        filename = self._sanitize_filename(bookmark.title)
+        # Передаем base_path как parent_path, чтобы _sanitize_filename мог учесть его длину
+        filename = self._sanitize_filename(bookmark.title, parent_path=base_path, is_folder=False)
+        logger.debug(f"Имя файла после _sanitize_filename: '{filename}'")
 
         # Добавляем расширение .md
         if not filename.endswith(".md"):
             filename += ".md"
 
         file_path = base_path / filename
+        
         logger.debug(f"Определен путь для файла закладки: {file_path}")
 
         return file_path

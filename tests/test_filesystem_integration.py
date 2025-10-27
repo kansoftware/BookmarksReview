@@ -203,13 +203,13 @@ class TestFileSystemIntegration:
         test_cases = [
             ("Normal File", "Normal File"),
             ("File with spaces", "File with spaces"),
-            ("File/with/slashes", "Filewithslashes"),  # Слэши удаляются
-            ("File:with:colons", "Filewithcolons"),    # Двоеточия удаляются
-            ("File*with*asterisks", "Filewithasterisks"),  # Звездочки удаляются
-            ("File?with?question", "Filewithquestion"),    # Вопросительные знаки удаляются
-            ("File\"with\"quotes", "Filewithquotes"),      # Кавычки удаляются
-            ("File<with>brackets", "Filewithbrackets"),    # Скобки удаляются
-            ("File|with|pipes", "Filewithpipes"),          # Пайпы удаляются
+            ("File/with/slashes", "File_with_slashes"),  # Слэши заменяются на подчеркивания
+            ("File:with:colons", "File_with_colons"),    # Двоеточия заменяются на подчеркивания
+            ("File*with*asterisks", "File_with_asterisks"),  # Звездочки заменяются на подчеркивания
+            ("File?with?question", "File_with_question"),    # Вопросительные знаки заменяются на подчеркивания
+            ("File\"with\"quotes", "File_with_quotes"),      # Кавычки заменяются на подчеркивания
+            ("File<with>brackets", "File_with_brackets"),    # Скобки заменяются на подчеркивания
+            ("File|with|pipes", "File_with_pipes"),          # Пайпы заменяются на подчеркивания
             ("Файл на русском", "Файл на русском"),
             ("File&with&ampersand", "File&with&ampersand"),  # HTML-сущности не обрабатываются
             ("File%with%percent", "File%with%percent"),    # Проценты не удаляются (не в регулярном выражении)

@@ -26,7 +26,7 @@ from src.models import Bookmark, BookmarkFolder, ProcessedPage
 from src.parser import BookmarkParser
 from src.progress import ProgressManager, calculate_config_hash
 from src.summarizer import ContentSummarizer
-from src.utils import ProgressTracker
+from src.utils import ProgressTracker, PathUtils
 from src.writer import FileSystemWriter
 
 # Настройка логера для модуля
@@ -344,7 +344,8 @@ async def traverse_and_process_folder(
     )
 
     # Создаем папку в файловой системе
-    folder_path = base_path / writer._sanitize_filename(folder.name)
+    folder_name = writer._sanitize_filename(folder.name, parent_path=base_path, is_folder=True)
+    folder_path = base_path / folder_name
     folder_path.mkdir(parents=True, exist_ok=True)
     logger.debug(f"Создана папка в файловой системе: {folder_path}")
 
@@ -485,7 +486,9 @@ async def traverse_and_process_folder(
 
         if page:
             # Определяем путь для сохранения файла
-            file_path = folder_path / writer._sanitize_filename(bookmark.title)
+            filename = writer._sanitize_filename(bookmark.title, parent_path=folder_path, is_folder=False, max_path_len = 250) # int((255 - len(folder_path.name)*2)/2)
+            file_path = folder_path / filename
+
             if not str(file_path).endswith(".md"):
                 file_path = file_path.with_suffix(".md")
 

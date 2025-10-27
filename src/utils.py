@@ -58,10 +58,11 @@ class PathUtils:
         # Удаляем пробелы в начале и конце
         sanitized = sanitized.strip()
 
-        # Ограничиваем длину имени (максимум 255 символов для большинства файловых систем)
-        max_length = 255
-        if len(sanitized) > max_length:
-            sanitized = sanitized[:max_length].rstrip()
+        # Ограничиваем длину имени (максимум 255 байт для большинства файловых систем)
+        # Учитываем, что UTF-8 символы могут занимать несколько байт
+        max_bytes = 255
+        while len(sanitized.encode('utf-8')) > max_bytes and len(sanitized) > 0:
+            sanitized = sanitized[:-1]
 
         # Если имя стало пустым после очистки, используем значение по умолчанию
         if not sanitized:

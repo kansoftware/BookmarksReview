@@ -137,7 +137,7 @@ class TestMainModule(unittest.TestCase):
         
         # Настраиваем mock для успешной загрузки
         mock_fetcher.fetch_content.return_value = "<html><body>Test content</body></html>"
-        mock_fetcher.extract_text.return_value = "Test content"
+        mock_fetcher.extract_text = MagicMock(return_value="Test content") # Изменено на MagicMock
         mock_summarizer.generate_summary.return_value = "Test summary"
         
         processed_urls = set()
@@ -162,10 +162,11 @@ class TestMainModule(unittest.TestCase):
         # Проверяем результат
         self.assertIsNotNone(result)
         self.assertIsInstance(result, ProcessedPage)
-        self.assertEqual(result.url, self.test_bookmark.url)
-        self.assertEqual(result.title, self.test_bookmark.title)
-        self.assertEqual(result.summary, "Test summary")
-        self.assertEqual(result.status, 'success')
+        if result: # Добавлена проверка на None
+            self.assertEqual(result.url, self.test_bookmark.url)
+            self.assertEqual(result.title, self.test_bookmark.title)
+            self.assertEqual(result.summary, "Test summary")
+            self.assertEqual(result.status, 'success')
         
         # Проверяем вызовы mock объектов
         mock_fetcher.fetch_content.assert_called_once_with(self.test_bookmark.url)
@@ -226,7 +227,10 @@ class TestMainModule(unittest.TestCase):
         
         mock_writer = MagicMock()
         mock_writer_class.return_value = mock_writer
-        mock_writer._sanitize_filename.return_value = "test"
+        # Обновляем mock для _sanitize_filename, чтобы он принимал parent_path и is_folder
+        def mock_sanitize_filename(name, parent_path=None, max_path_len=255, is_folder=False):
+            return name.replace("/", "_").replace(":", "_").replace("<", "_").replace(">", "_").replace('"', "_").replace("|", "_").replace("?", "_").replace("*", "_")[:50]
+        mock_writer._sanitize_filename = mock_sanitize_filename
         
         mock_diagram = MagicMock()
         mock_diagram_gen.return_value = mock_diagram
@@ -331,7 +335,7 @@ class TestMainModuleAsync(unittest.IsolatedAsyncioTestCase):
         
         # Настраиваем mock для успешной загрузки
         mock_fetcher.fetch_content.return_value = "<html><body>Test content</body></html>"
-        mock_fetcher.extract_text.return_value = "Test content"
+        mock_fetcher.extract_text = MagicMock(return_value="Test content") # Изменено на MagicMock
         mock_summarizer.generate_summary.return_value = "Test summary"
         
         processed_urls = set()
@@ -341,8 +345,8 @@ class TestMainModuleAsync(unittest.IsolatedAsyncioTestCase):
         mock_progress_manager = MagicMock()
         mock_progress_manager.get_processed_urls.return_value = processed_urls
         mock_progress_manager.get_failed_urls.return_value = failed_urls
-        mock_progress_manager.add_processed_bookmark = MagicMock()
-        mock_progress_manager.add_failed_bookmark = MagicMock()
+        mock_progress_manager.add_processed_bookmark = MagicMock() # Возвращено на MagicMock
+        mock_progress_manager.add_failed_bookmark = MagicMock()     # Возвращено на MagicMock
         
         # Создаем mock аргументов
         mock_args = MagicMock()
@@ -356,10 +360,11 @@ class TestMainModuleAsync(unittest.IsolatedAsyncioTestCase):
         # Проверяем результат
         self.assertIsNotNone(result)
         self.assertIsInstance(result, ProcessedPage)
-        self.assertEqual(result.url, self.test_bookmark.url)
-        self.assertEqual(result.title, self.test_bookmark.title)
-        self.assertEqual(result.summary, "Test summary")
-        self.assertEqual(result.status, 'success')
+        if result: # Добавлена проверка на None
+            self.assertEqual(result.url, self.test_bookmark.url)
+            self.assertEqual(result.title, self.test_bookmark.title)
+            self.assertEqual(result.summary, "Test summary")
+            self.assertEqual(result.status, 'success')
         
         # Проверяем вызовы mock объектов
         mock_fetcher.fetch_content.assert_called_once_with(self.test_bookmark.url)
@@ -385,8 +390,8 @@ class TestMainModuleAsync(unittest.IsolatedAsyncioTestCase):
         mock_progress_manager = MagicMock()
         mock_progress_manager.get_processed_urls.return_value = processed_urls
         mock_progress_manager.get_failed_urls.return_value = failed_urls
-        mock_progress_manager.add_processed_bookmark = MagicMock()
-        mock_progress_manager.add_failed_bookmark = MagicMock()
+        mock_progress_manager.add_processed_bookmark = MagicMock() # Возвращено на MagicMock
+        mock_progress_manager.add_failed_bookmark = MagicMock()     # Возвращено на MagicMock
         
         # Создаем mock аргументов
         mock_args = MagicMock()
@@ -414,8 +419,8 @@ class TestMainModuleAsync(unittest.IsolatedAsyncioTestCase):
         mock_progress_manager = MagicMock()
         mock_progress_manager.get_processed_urls.return_value = processed_urls
         mock_progress_manager.get_failed_urls.return_value = failed_urls
-        mock_progress_manager.add_processed_bookmark = MagicMock()
-        mock_progress_manager.add_failed_bookmark = MagicMock()
+        mock_progress_manager.add_processed_bookmark = MagicMock() # Возвращено на MagicMock
+        mock_progress_manager.add_failed_bookmark = MagicMock()     # Возвращено на MagicMock
         
         # Создаем mock аргументов
         mock_args = MagicMock()
